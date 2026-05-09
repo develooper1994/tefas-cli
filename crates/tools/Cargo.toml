@@ -1,0 +1,12 @@
+[package]
+name = "tools"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "tefas_tools"
+
+[dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }

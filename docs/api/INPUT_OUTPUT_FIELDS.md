@@ -33,8 +33,8 @@ Her bölüm: Script adı / Girdi alanları / Çıktı alanları (örnek).
 
 ## fonUnvanAra
 - Girdi alanları: dil, aramaMetni, fonTipi (script option). Script accepts `-T`, `--fontipi` and also `--fundtype` (canonical alias). Dataset example uses JSON key `fonTip`. Allowed values: YAT|EMK|BYF|ALL — `ALL` = no filter; when `ALL` is used the payload emits `null` for `fonTip` and the Referer omits `fundType`.
-- Dataset fixture: datasets/tefas/api/fonUnvanAra/input.req.txt
-- Dataset output: datasets/tefas/api/fonUnvanAra/output.body
+- Dataset fixture: datasets/api/fonUnvanAra/input.req.txt
+- Dataset output: datasets/api/fonUnvanAra/output.body
 - Çıktı alanları (örnek): resultList[]  (dataset örneğinde boş dizi; örnek alan yok)
 
 ## fonUnvanGetir
@@ -48,7 +48,7 @@ Her bölüm: Script adı / Girdi alanları / Çıktı alanları (örnek).
 ## getBanners
 ## getBanners
 - Girdi alanları: dil, cacheTTL
-- Dataset fixture: datasets/tefas/api/getBanners/output.body
+- Dataset fixture: datasets/api/getBanners/output.body
 - Çıktı alanları (örnek): base64Image, base64LogoImage, base64MobileImage, buttonText, description, endDate, imageAlt, startDate, title, url
 
 ## getBefasFonTurBazliIslemHacmi
@@ -58,9 +58,9 @@ Her bölüm: Script adı / Girdi alanları / Çıktı alanları (örnek).
 ## getBefasFonTuruBazindaFonSayisi
 - Girdi alanları: yil (required), ay (optional; zero-padded as `MM` when provided), hafta (optional)
 - Notes: `--ay` and `--hafta` are mutually exclusive; `--yil` is required for real requests (test mode `TEFAS_TEST_RESPONSE` bypasses this).
-- Dataset fixture: datasets/tefas/api/getBefasFonTuruBazindaFonSayisi/input.req.txt
-- Dataset fixture: datasets/tefas/api/getBefasFonTuruBazindaFonSayisi/input.req.txt
-- Dataset output: datasets/tefas/api/getBefasFonTuruBazindaFonSayisi/output.body
+- Dataset fixture: datasets/api/getBefasFonTuruBazindaFonSayisi/input.req.txt
+- Dataset fixture: datasets/api/getBefasFonTuruBazindaFonSayisi/input.req.txt
+- Dataset output: datasets/api/getBefasFonTuruBazindaFonSayisi/output.body
 - Çıktı alanları (örnek): data[].fonTuru, data[].adet
 
 ## getBefasToplamIslemHacmi
@@ -69,8 +69,8 @@ Her bölüm: Script adı / Girdi alanları / Çıktı alanları (örnek).
 
 ## getBefasUyeBazliIslemHacmi
 - Girdi alanları: yil (required), hafta (optional), paraBirimi, raporTuru, dil
-- Dataset fixture: datasets/tefas/api/getBefasUyeBazliIslemHacmi/input.req.txt
-- Dataset output: datasets/tefas/api/getBefasUyeBazliIslemHacmi/output.body
+- Dataset fixture: datasets/api/getBefasUyeBazliIslemHacmi/input.req.txt
+- Dataset output: datasets/api/getBefasUyeBazliIslemHacmi/output.body
 - Çıktı alanları (örnek): data[].uyeKod, data[].kurumUnvan, data[].islemHacmi, data[].hacimOran
 
 ## getFplDovizList
@@ -79,7 +79,7 @@ Her bölüm: Script adı / Girdi alanları / Çıktı alanları (örnek).
 
 ## getFplFonList
 - Girdi alanları: (örnek: none / payload `{}`)
-- Dataset output: datasets/tefas/api/getFplFonList/output.body
+- Dataset output: datasets/api/getFplFonList/output.body
 - Çıktı alanları (örnek): (dataset örneği boş — örnek alan yok)
 
 ## getFplMkkStokBakiye

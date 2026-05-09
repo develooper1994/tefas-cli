@@ -114,8 +114,8 @@ Bu veri urunleri daha sonra backtest, risk tarama, turetilmis metrik ve trend te
 | Konum | Tür | Kapsam |
 |-------|-----|--------|
 | `crates/*/src/**` `#[cfg(test)]` | unit | izole fonksiyon mantığı |
-| `crates/tefas-page/tests/compare_datasets.rs` | integration | parser parity + FundPage API |
-| `crates/tefas-page/benches/parse_document_bench.rs` | criterion bench | parse throughput |
+| `crates/parser/tests/compare_datasets.rs` | integration | parser parity + FundPage API |
+| `crates/parser/benches/parse_document_bench.rs` | criterion bench | parse throughput |
 | `xtask/src/bin/fuzz_*.rs` | libFuzzer | parser + network crash bulma |
 | `cargo xtask tefas fuzz --dry-run` | smoke fuzz | tüm operasyon × backend matris testi |
 

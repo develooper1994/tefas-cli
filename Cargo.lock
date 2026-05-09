@@ -101,6 +101,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f202df86484c868dbad7eaa557ef785d5c66295e41b460ef922eca0723b842c"
 
 [[package]]
+name = "api"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "arbitrary"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -392,6 +401,22 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
+name = "cli"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "clap",
+ "clap_complete",
+ "criterion",
+ "image",
+ "lib",
+ "serde_json",
+ "tokio",
+ "tools",
+]
+
+[[package]]
 name = "cmake"
 version = "0.1.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -423,6 +448,14 @@ name = "compression-core"
 version = "0.4.32"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc14f565cf027a105f7a44ccf9e5b424348421a1d8952a8fc9d499d313107789"
+
+[[package]]
+name = "config"
+version = "0.1.0"
+dependencies = [
+ "http-config",
+ "serde",
+]
 
 [[package]]
 name = "cookie"
@@ -606,6 +639,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "domain"
+version = "0.1.0"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "dunce"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -655,6 +695,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e6853b52649d4ac5c0bd02320cddc5ba956bdb407c4b75a2c6b75bf51500f8c"
 dependencies = [
  "simd-adler32",
+]
+
+[[package]]
+name = "ffi"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "clap",
+ "lib",
+ "serde_json",
 ]
 
 [[package]]
@@ -905,6 +955,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bytes",
+ "config",
  "dirs",
  "http",
  "http-body-util",
@@ -916,7 +967,6 @@ dependencies = [
  "reqwest",
  "rustls",
  "serde_json",
- "tefas-config",
  "tokio",
  "tracing",
  "url",
@@ -1269,6 +1319,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "lib"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "api",
+ "config",
+ "domain",
+ "media",
+ "network",
+ "parser",
+ "serde_json",
+ "tokio",
+ "usecase",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1355,6 +1421,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112b39cec0b298b6c1999fee3e31427f74f676e4cb9879ed1a121b43661a4154"
 
 [[package]]
+name = "media"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "image",
+ "image-util",
+ "serde_json",
+]
+
+[[package]]
 name = "memchr"
 version = "2.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1418,6 +1495,13 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "tempfile",
+]
+
+[[package]]
+name = "network"
+version = "0.1.0"
+dependencies = [
+ "http-client",
 ]
 
 [[package]]
@@ -1522,6 +1606,18 @@ name = "option-ext"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "04744f49eae99ab78e0d5c0b603ab218f515ea8cfe5a456d7629ad883a3b6e7d"
+
+[[package]]
+name = "parser"
+version = "0.1.0"
+dependencies = [
+ "aho-corasick",
+ "criterion",
+ "once_cell",
+ "regex",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "percent-encoding"
@@ -2154,118 +2250,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "tefas-api"
-version = "0.1.0"
-dependencies = [
- "clap",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "tefas-cli"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "clap",
- "clap_complete",
- "criterion",
- "image",
- "serde_json",
- "tefas-lib",
- "tefas-tools",
- "tokio",
-]
-
-[[package]]
-name = "tefas-config"
-version = "0.1.0"
-dependencies = [
- "http-config",
- "serde",
-]
-
-[[package]]
-name = "tefas-domain"
-version = "0.1.0"
-dependencies = [
- "serde",
-]
-
-[[package]]
-name = "tefas-ffi"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "serde_json",
- "tefas-lib",
-]
-
-[[package]]
-name = "tefas-lib"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "serde_json",
- "tefas-api",
- "tefas-config",
- "tefas-domain",
- "tefas-media",
- "tefas-network",
- "tefas-parser",
- "tefas-usecase",
- "tokio",
-]
-
-[[package]]
-name = "tefas-media"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "image",
- "image-util",
- "serde_json",
-]
-
-[[package]]
-name = "tefas-network"
-version = "0.1.0"
-dependencies = [
- "http-client",
-]
-
-[[package]]
-name = "tefas-parser"
-version = "0.1.0"
-dependencies = [
- "aho-corasick",
- "criterion",
- "once_cell",
- "regex",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "tefas-tools"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "reqwest",
- "tokio",
-]
-
-[[package]]
-name = "tefas-usecase"
-version = "0.1.0"
-dependencies = [
- "tefas-domain",
-]
-
-[[package]]
 name = "tempfile"
 version = "3.27.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2456,6 +2440,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "tools"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "reqwest",
+ "tokio",
+]
+
+[[package]]
 name = "tower"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2579,6 +2572,13 @@ dependencies = [
  "idna",
  "percent-encoding",
  "serde",
+]
+
+[[package]]
+name = "usecase"
+version = "0.1.0"
+dependencies = [
+ "domain",
 ]
 
 [[package]]
@@ -3097,11 +3097,11 @@ dependencies = [
  "anyhow",
  "flate2",
  "libfuzzer-sys",
+ "network",
+ "parser",
  "serde_json",
- "tefas-network",
- "tefas-parser",
- "tefas-tools",
  "tokio",
+ "tools",
 ]
 
 [[package]]

@@ -14,8 +14,8 @@ Not: Geriye dönük uyumluluk için `cargo xtask probe|bench|profile|perf-remote
 
 ## Hızlı Referans
 
-Operasyon tanımlayıcıları için → [`tefas-api` (crates/tefas-funds)](../../crates/tefas-funds/README.md)  
-CLI flag detayları için → [`tefas-cli` (crates/tefas-cli)](../../crates/tefas-cli/README.md)
+Operasyon tanımlayıcıları için → [`tefas-api` (crates/api)](../../crates/api/README.md)  
+CLI flag detayları için → [`tefas-cli` (crates/cli)](../../crates/cli/README.md)
 
 ## Yardım Komutları
 

@@ -307,7 +307,7 @@ fn run_remote_pipeline(workspace_root: &Path, opts: &RemotePipelineOpts) -> Resu
     let out_dir = format!("{}/target/perf-artifacts/{}/{}", opts.remote_repo, opts.profile_bucket(), ts);
 
     let remote_script = format!(
-        "set -euo pipefail\ncd {repo}\n\nif [[ ! -d datasets/tefas/fundpage/html ]] || [[ -z \"$(find datasets/tefas/fundpage/html -maxdepth 1 -type f -name '*.html' | head -n 1)\" ]]; then\n  echo \"ERROR: datasets/tefas/fundpage/html is missing on remote host.\" >&2\n  exit 2\nfi\n\nif [[ ! -x {bin} ]]; then\n  echo \"ERROR: remote prebuilt binary not found: {bin}\" >&2\n  exit 2\nfi\n\nOUT_DIR={out_dir}\nmkdir -p \"$OUT_DIR/parsed\"\n\nmapfile -t HTML_FILES < <(find datasets/tefas/fundpage/html -maxdepth 1 -type f -name '*.html' | sort)\nHTML_COUNT=\"${{#HTML_FILES[@]}}\"\nif [[ \"$HTML_COUNT\" -eq 0 ]]; then\n  echo \"ERROR: no HTML files found in datasets/tefas/fundpage/html\" >&2\n  exit 2\nfi\n\nWORKLOAD_CMD='for f in datasets/tefas/fundpage/html/*.html; do {bin} parse \"$f\" >/dev/null; done'\n{{\n  echo \"profile={profile}\"\n  echo \"bucket={bucket}\"\n  echo \"workload=all_dataset_pages\"\n  echo \"html_count=$HTML_COUNT\"\n  echo \"filter={filter}\"\n  echo \"measure={measure}\"\n  echo \"warmup={warmup}\"\n}} > \"$OUT_DIR/run_meta.txt\"\n\nfor f in datasets/tefas/fundpage/html/*.html; do\n  b=\"$(basename \"$f\" .html)\"\n  {bin} parse \"$f\" > \"$OUT_DIR/parsed/${{b}}.txt\"\ndone\n\nif command -v perf >/dev/null 2>&1; then\n  perf stat -o \"$OUT_DIR/perf_stat.txt\" -- /bin/bash -lc \"$WORKLOAD_CMD\" > /dev/null 2>&1\n  perf record -F 199 --call-graph dwarf --output \"$OUT_DIR/perf.data\" -- /bin/bash -lc \"$WORKLOAD_CMD\"\n  perf report --stdio --no-children --percent-limit 0.05 --sort overhead,symbol -i \"$OUT_DIR/perf.data\" > \"$OUT_DIR/perf_report.txt\"\nelse\n  echo \"WARN: perf not found on remote host\" > \"$OUT_DIR/perf_report.txt\"\nfi\n\nif [[ {run_samply} == '1' ]] && command -v samply >/dev/null 2>&1; then\n  samply record --save-only -o \"$OUT_DIR/profile.json.gz\" -- /bin/bash -lc \"$WORKLOAD_CMD\" > /dev/null 2>&1 || true\nfi\n\necho \"remote perf complete: $OUT_DIR\"\n",
+        "set -euo pipefail\ncd {repo}\n\nif [[ ! -d datasets/fundpage/html ]] || [[ -z \"$(find datasets/fundpage/html -maxdepth 1 -type f -name '*.html' | head -n 1)\" ]]; then\n  echo \"ERROR: datasets/fundpage/html is missing on remote host.\" >&2\n  exit 2\nfi\n\nif [[ ! -x {bin} ]]; then\n  echo \"ERROR: remote prebuilt binary not found: {bin}\" >&2\n  exit 2\nfi\n\nOUT_DIR={out_dir}\nmkdir -p \"$OUT_DIR/parsed\"\n\nmapfile -t HTML_FILES < <(find datasets/fundpage/html -maxdepth 1 -type f -name '*.html' | sort)\nHTML_COUNT=\"${{#HTML_FILES[@]}}\"\nif [[ \"$HTML_COUNT\" -eq 0 ]]; then\n  echo \"ERROR: no HTML files found in datasets/fundpage/html\" >&2\n  exit 2\nfi\n\nWORKLOAD_CMD='for f in datasets/fundpage/html/*.html; do {bin} parse \"$f\" >/dev/null; done'\n{{\n  echo \"profile={profile}\"\n  echo \"bucket={bucket}\"\n  echo \"workload=all_dataset_pages\"\n  echo \"html_count=$HTML_COUNT\"\n  echo \"filter={filter}\"\n  echo \"measure={measure}\"\n  echo \"warmup={warmup}\"\n}} > \"$OUT_DIR/run_meta.txt\"\n\nfor f in datasets/fundpage/html/*.html; do\n  b=\"$(basename \"$f\" .html)\"\n  {bin} parse \"$f\" > \"$OUT_DIR/parsed/${{b}}.txt\"\ndone\n\nif command -v perf >/dev/null 2>&1; then\n  perf stat -o \"$OUT_DIR/perf_stat.txt\" -- /bin/bash -lc \"$WORKLOAD_CMD\" > /dev/null 2>&1\n  perf record -F 199 --call-graph dwarf --output \"$OUT_DIR/perf.data\" -- /bin/bash -lc \"$WORKLOAD_CMD\"\n  perf report --stdio --no-children --percent-limit 0.05 --sort overhead,symbol -i \"$OUT_DIR/perf.data\" > \"$OUT_DIR/perf_report.txt\"\nelse\n  echo \"WARN: perf not found on remote host\" > \"$OUT_DIR/perf_report.txt\"\nfi\n\nif [[ {run_samply} == '1' ]] && command -v samply >/dev/null 2>&1; then\n  samply record --save-only -o \"$OUT_DIR/profile.json.gz\" -- /bin/bash -lc \"$WORKLOAD_CMD\" > /dev/null 2>&1 || true\nfi\n\necho \"remote perf complete: $OUT_DIR\"\n",
         repo = sh_quote(&opts.remote_repo),
         bin = sh_quote(&remote_profile_bin),
         out_dir = sh_quote(&out_dir),
@@ -410,7 +410,7 @@ fn run_remote_samply(workspace_root: &Path, opts: &RemoteSamplyOpts) -> Result<(
 
     let remote_cmd_for_workload = match opts.workload.as_str() {
         "parse" => format!(
-            "{bin} --quiet --parse-concurrency 1 parse datasets/tefas/fundpage/html/*.html --output /tmp/tefas_samply_parse.json",
+            "{bin} --quiet --parse-concurrency 1 parse datasets/fundpage/html/*.html --output /tmp/tefas_samply_parse.json",
             bin = sh_quote(&remote_bin)
         ),
         "fundpage" => format!(
@@ -504,7 +504,7 @@ fn run_pgo(workspace_root: &Path, args: Vec<String>) -> Result<()> {
             )?;
 
             println!("Running workload to gather profile data...");
-            let fixture = workspace_root.join("datasets/tefas/fundpage/html/ADE.html");
+            let fixture = workspace_root.join("datasets/fundpage/html/ADE.html");
             let workload_output = pgo_data_dir.join("parse_output.json");
             run_checked(
                 Command::new(workspace_root.join("target/release/tefas-cli"))
@@ -793,7 +793,7 @@ pub fn print_help() {
 }
 
 fn run_ffi_header(workspace_root: &Path) -> Result<()> {
-    let ffi_dir = workspace_root.join("crates/tefas-ffi");
+    let ffi_dir = workspace_root.join("crates/ffi");
     if !ffi_dir.exists() {
         bail!("tefas-ffi crate directory not found");
     }
@@ -1037,7 +1037,7 @@ fn run_concurrency_sweep(workspace_root: &Path, args: Vec<String>) -> Result<()>
     fs::write(&out_file, "timestamp\tworkload\tconcurrency\trun\tseconds\n")?;
 
     let remote_script = format!(
-        "set -euo pipefail\ncd {repo}\nBIN={bin}\nRUNS={runs}\nLEVELS='{levels}'\nWORKLOADS='{workloads}'\nQUERY_OPS='{qops}'\nTS_REMOTE=$(date +%Y%m%d_%H%M%S)\ncontains_workload() {{ local name=\"$1\"; [[ \",$WORKLOADS,\" == *\",$name,\"* ]]; }}\nrun_timed() {{ local cmd=\"$1\"; {{ /usr/bin/time -f \"%e\" bash -lc \"$cmd\" >/dev/null; }} 2>&1; }}\nIFS=',' read -r -a LEVEL_ARR <<< \"$LEVELS\"\nIFS=',' read -r -a QUERY_OPS_ARR <<< \"$QUERY_OPS\"\nfor c in \"${{LEVEL_ARR[@]}}\"; do for ((i=1;i<=RUNS;i++)); do if contains_workload fundpage; then sec=$(run_timed \"$BIN --quiet --network-concurrency $c fundpage AC5 TLY TAR ZFB --output /tmp/fundpage_sweep.json\"); echo -e \"$TS_REMOTE\tfundpage\t$c\t$i\t$sec\"; fi; if contains_workload query; then query_cmd=\"$BIN --quiet --network-concurrency $c query\"; for op in \"${{QUERY_OPS_ARR[@]}}\"; do query_cmd+=\" $op\"; done; sec=$(run_timed \"$query_cmd > /tmp/query_sweep.json\"); echo -e \"$TS_REMOTE\tquery\t$c\t$i\t$sec\"; fi; if contains_workload fetch; then sec=$(run_timed \"$BIN --quiet --network-concurrency $c fetch https://www.tefas.gov.tr/tr/fon-detayli-analiz/AC5 https://www.tefas.gov.tr/tr/fon-detayli-analiz/TLY --output /tmp/fetch_sweep\"); echo -e \"$TS_REMOTE\tfetch\t$c\t$i\t$sec\"; fi; if contains_workload parse; then sec=$(run_timed \"$BIN --quiet --parse-concurrency $c parse datasets/tefas/fundpage/html/*.html --output /tmp/parse_sweep.json\"); echo -e \"$TS_REMOTE\tparse\t$c\t$i\t$sec\"; fi; done; done",
+        "set -euo pipefail\ncd {repo}\nBIN={bin}\nRUNS={runs}\nLEVELS='{levels}'\nWORKLOADS='{workloads}'\nQUERY_OPS='{qops}'\nTS_REMOTE=$(date +%Y%m%d_%H%M%S)\ncontains_workload() {{ local name=\"$1\"; [[ \",$WORKLOADS,\" == *\",$name,\"* ]]; }}\nrun_timed() {{ local cmd=\"$1\"; {{ /usr/bin/time -f \"%e\" bash -lc \"$cmd\" >/dev/null; }} 2>&1; }}\nIFS=',' read -r -a LEVEL_ARR <<< \"$LEVELS\"\nIFS=',' read -r -a QUERY_OPS_ARR <<< \"$QUERY_OPS\"\nfor c in \"${{LEVEL_ARR[@]}}\"; do for ((i=1;i<=RUNS;i++)); do if contains_workload fundpage; then sec=$(run_timed \"$BIN --quiet --network-concurrency $c fundpage AC5 TLY TAR ZFB --output /tmp/fundpage_sweep.json\"); echo -e \"$TS_REMOTE\tfundpage\t$c\t$i\t$sec\"; fi; if contains_workload query; then query_cmd=\"$BIN --quiet --network-concurrency $c query\"; for op in \"${{QUERY_OPS_ARR[@]}}\"; do query_cmd+=\" $op\"; done; sec=$(run_timed \"$query_cmd > /tmp/query_sweep.json\"); echo -e \"$TS_REMOTE\tquery\t$c\t$i\t$sec\"; fi; if contains_workload fetch; then sec=$(run_timed \"$BIN --quiet --network-concurrency $c fetch https://www.tefas.gov.tr/tr/fon-detayli-analiz/AC5 https://www.tefas.gov.tr/tr/fon-detayli-analiz/TLY --output /tmp/fetch_sweep\"); echo -e \"$TS_REMOTE\tfetch\t$c\t$i\t$sec\"; fi; if contains_workload parse; then sec=$(run_timed \"$BIN --quiet --parse-concurrency $c parse datasets/fundpage/html/*.html --output /tmp/parse_sweep.json\"); echo -e \"$TS_REMOTE\tparse\t$c\t$i\t$sec\"; fi; done; done",
         repo = sh_quote(&remote_repo),
         bin = sh_quote(&remote_bin),
         runs = runs,

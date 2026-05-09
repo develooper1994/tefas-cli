@@ -1,0 +1,14 @@
+[package]
+name = "ffi"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "tefas_ffi"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anyhow = { workspace = true }
+serde_json = { workspace = true }
+clap = { workspace = true }
+tefas = { workspace = true, features = ["tefas-compat", "hyper-backend", "wreq-backend"] }

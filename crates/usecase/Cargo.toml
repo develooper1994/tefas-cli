@@ -1,0 +1,10 @@
+[package]
+name = "usecase"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "tefas_usecase"
+
+[dependencies]
+tefas-domain = { workspace = true }

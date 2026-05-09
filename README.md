@@ -62,17 +62,17 @@ shared workspace:
 
 | Dizin (`crates/`) | Paket | Sorumluluk |
 |---|---|---|
-| [tefas-lib](crates/tefas-lib/README.md) | `tefas-lib` (`lib name: tefas`) | CLI facade + executor katmanı (`run_fundpage_batch`, `run_query_batch`, `run_fetch_batch`) |
-| [tefas-domain](crates/tefas-domain/README.md) | `tefas-domain` | IO bağımsız domain modelleri ve hata sınıfları |
-| [tefas-usecase](crates/tefas-usecase/README.md) | `tefas-usecase` | Batch planlama/policy katmanı (query/fundpage/fetch concurrency) |
-| [tefas-core](crates/tefas-core/README.md) | `tefas-config` | `AppConfig`, `AuthConfig` ve TEFAS default URL/UA/referer |
-| [tefas-funds](crates/tefas-funds/README.md) | `tefas-api` | `Operation` enum (32 varyant), `OperationSpec` (endpoint + referer) |
-| [tefas-network](crates/tefas-network/README.md) | `tefas-network` | Geriye dönük uyumluluk adaptörü (`pub use http_client::*`) |
-| [tefas-page](crates/tefas-page/README.md) | `tefas-parser` | HTML parser: lol→html5ever→tl→regex fallback zinciri |
-| [tefas-cli](crates/tefas-cli/README.md) | `tefas-cli` | CLI binary (clap), tüm crate'leri koordine eder |
-| [tefas-ffi](crates/tefas-ffi/README.md) | `tefas-ffi` | FFI giriş noktası (CLI default build zincirinde zorunlu değil) |
-| [tefas-media](crates/tefas-media/README.md) | `tefas-media` | TEFAS `getLogo` alan eşleme (dönüşüm shared `image-util` ile) |
-| [tefas-tools](crates/tefas-tools/README.md) | `tefas-tools` | `install_with_fallback`: apt/dnf/yum/pacman/apk |
+| [tefas-lib](crates/lib/README.md) | `tefas-lib` (`lib name: tefas`) | CLI facade + executor katmanı (`run_fundpage_batch`, `run_query_batch`, `run_fetch_batch`) |
+| [tefas-domain](crates/domain/README.md) | `tefas-domain` | IO bağımsız domain modelleri ve hata sınıfları |
+| [tefas-usecase](crates/usecase/README.md) | `tefas-usecase` | Batch planlama/policy katmanı (query/fundpage/fetch concurrency) |
+| [tefas-core](crates/core/README.md) | `tefas-config` | `AppConfig`, `AuthConfig` ve TEFAS default URL/UA/referer |
+| [tefas-funds](crates/api/README.md) | `tefas-api` | `Operation` enum (32 varyant), `OperationSpec` (endpoint + referer) |
+| [tefas-network](crates/network/README.md) | `tefas-network` | Geriye dönük uyumluluk adaptörü (`pub use http_client::*`) |
+| [tefas-page](crates/parser/README.md) | `tefas-parser` | HTML parser: lol→html5ever→tl→regex fallback zinciri |
+| [tefas-cli](crates/cli/README.md) | `tefas-cli` | CLI binary (clap), tüm crate'leri koordine eder |
+| [tefas-ffi](crates/ffi/README.md) | `tefas-ffi` | FFI giriş noktası (CLI default build zincirinde zorunlu değil) |
+| [tefas-media](crates/media/README.md) | `tefas-media` | TEFAS `getLogo` alan eşleme (dönüşüm shared `image-util` ile) |
+| [tefas-tools](crates/tools/README.md) | `tefas-tools` | `install_with_fallback`: apt/dnf/yum/pacman/apk |
 
 ---
 
@@ -87,8 +87,8 @@ shared workspace:
 | [docs/operations/low_level_http.md](docs/operations/low_level_http.md) | Low-level HTTP araştırması |
 | [docs/api/INPUT_OUTPUT_FIELDS.md](docs/api/INPUT_OUTPUT_FIELDS.md) | API alan referansı |
 | [shared/README.md](shared/README.md) | Ortak crate'ler (http-config/http-client/image-util) |
-| [shared/crates/http-client/README.md](shared/crates/http-client/README.md) | Taşınan ağ/TLS backend katmanı |
-| [shared/crates/http-config/README.md](shared/crates/http-config/README.md) | Taşınan HTTP config katmanı |
+| [crates/http-client/README.md](crates/http-client/README.md) | Taşınan ağ/TLS backend katmanı |
+| [crates/http-config/README.md](crates/http-config/README.md) | Taşınan HTTP config katmanı |
 
 ---
 

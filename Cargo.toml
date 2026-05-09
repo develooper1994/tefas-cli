@@ -1,20 +1,20 @@
 [workspace]
 members = [
     "xtask",
-    "crates/tefas-core",
-    "crates/tefas-domain",
-    "crates/tefas-usecase",
-    "crates/tefas-network",
-    "crates/tefas-funds",
-    "crates/tefas-page",
-    "crates/tefas-lib",
-    "crates/tefas-ffi",
-    "crates/tefas-cli",
-    "crates/tefas-tools",
-    "crates/tefas-media",
+    "crates/core",
+    "crates/domain",
+    "crates/usecase",
+    "crates/network",
+    "crates/api",
+    "crates/parser",
+    "crates/lib",
+    "crates/ffi",
+    "crates/cli",
+    "crates/tools",
+    "crates/media",
 ]
 default-members = [
-    "crates/tefas-cli",
+    "crates/cli",
 ]
 resolver = "2"
 
@@ -57,15 +57,15 @@ axum = "0.8"
 tower-http = { version = "0.6", features = ["cors", "trace"] }
 tower = { version = "0.5", features = ["util"] }
 
-http-config = { path = "shared/crates/http-config" }
-http-client = { path = "shared/crates/http-client", default-features = false }
-image-util = { path = "shared/crates/image-util" }
-tefas-config = { path = "crates/tefas-core" }
-tefas-domain = { path = "crates/tefas-domain" }
-tefas-usecase = { path = "crates/tefas-usecase" }
-tefas-network = { path = "crates/tefas-network", default-features = false }
-tefas-api = { path = "crates/tefas-funds", default-features = false }
-tefas-parser = { path = "crates/tefas-page" }
-tefas-media = { path = "crates/tefas-media" }
-tefas = { package = "tefas-lib", path = "crates/tefas-lib", default-features = false }
-tefas-tools = { path = "crates/tefas-tools" }
+http-config = { path = "crates/http-config" }
+http-client = { path = "crates/http-client", default-features = false }
+image-util = { path = "crates/image-util" }
+tefas-config = { package = "config", path = "crates/core" }
+tefas-domain = { package = "domain", path = "crates/domain" }
+tefas-usecase = { package = "usecase", path = "crates/usecase" }
+tefas-network = { package = "network", path = "crates/network", default-features = false }
+tefas-api = { package = "api", path = "crates/api", default-features = false }
+tefas-parser = { package = "parser", path = "crates/parser" }
+tefas-media = { package = "media", path = "crates/media" }
+tefas = { package = "lib", path = "crates/lib", default-features = false }
+tefas-tools = { package = "tools", path = "crates/tools" }

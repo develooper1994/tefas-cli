@@ -26,7 +26,7 @@ Remote-only notu:
 
 - Bu workflow'da `perf` ve `samply` sadece uzak Linux host üzerinde çalıştırılır.
 - Yerelde profiling akışı doğrudan `cargo xtask tefas bench` üzerinden yürütülür.
-- `cargo xtask tefas bench` tüm repo ile birlikte datasetleri (`../datasets/tefas/fundpage/html`) remote host'a rsync eder ve dataset varlığını doğrular.
+- `cargo xtask tefas bench` tüm repo ile birlikte datasetleri (`../datasets/fundpage/html`) remote host'a rsync eder ve dataset varlığını doğrular.
 
 Tek komutla uçtan uca ölçüm/profiling döngüsü:
 
@@ -181,7 +181,7 @@ Her iterasyonda aşağıdaki özet TODO içinde güncellenir:
 
 ## İlgili Dosyalar
 
-- `crates/tefas-page/src/fund_page/mod.rs`
-- `crates/tefas-page/benches/parse_document_bench.rs`
-- `crates/tefas-page/tests/compare_datasets.rs`
+- `crates/parser/src/fund_page/mod.rs`
+- `crates/parser/benches/parse_document_bench.rs`
+- `crates/parser/tests/compare_datasets.rs`
 - `TODO.md`

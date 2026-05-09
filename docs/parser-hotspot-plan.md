@@ -4,7 +4,7 @@ Bu belge, `tefas-parser` içinde kalan regex/string tarama hotspot'larini daha y
 
 ## Kapsam
 
-Hedef kod yolu agirlikli olarak [../crates/tefas-page/src/fund_page/mod.rs](../crates/tefas-page/src/fund_page/mod.rs) icindeki su fonksiyonlarda toplanir:
+Hedef kod yolu agirlikli olarak [../crates/parser/src/fund_page/mod.rs](../crates/parser/src/fund_page/mod.rs) icindeki su fonksiyonlarda toplanir:
 
 - `parse_html_text`
 - `extract_p_pairs`
@@ -173,7 +173,7 @@ Her asama su sira ile ilerlemeli:
 
 1. lokal unit/integration test
 2. `compare_fundpage_datasets`
-3. gerekirse `cargo run -q -p tefas-cli -- parse ../datasets/tefas/fundpage/html/*.html`
+3. gerekirse `cargo run -q -p tefas-cli -- parse ../datasets/fundpage/html/*.html`
 4. sadece bundan sonra `cargo xtask tefas bench --no-samply --cargo-profile profileDebug`
 
 Yerelde `perf` veya `samply` calistirilmamali.

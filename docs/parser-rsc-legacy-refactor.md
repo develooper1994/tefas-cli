@@ -1,6 +1,6 @@
 # Parser RSC/Legacy Refactor Outline
 
-Bu belge, [../crates/tefas-page/src/fund_page/mod.rs](../crates/tefas-page/src/fund_page/mod.rs) icindeki `parse_html_text` akisini daha net iki parser yoluna ayirmak icin mimari taslagi tarif eder.
+Bu belge, [../crates/parser/src/fund_page/mod.rs](../crates/parser/src/fund_page/mod.rs) icindeki `parse_html_text` akisini daha net iki parser yoluna ayirmak icin mimari taslagi tarif eder.
 
 ## Problem Tanimi
 
