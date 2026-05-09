@@ -429,7 +429,7 @@ fn run_remote_samply(workspace_root: &Path, opts: &RemoteSamplyOpts) -> Result<(
     };
 
     let remote_script = format!(
-        "set -euo pipefail\ncd {repo}/etl/sources/tefas\nif ! command -v samply >/dev/null 2>&1; then\n  echo \"ERROR: samply not found on remote host\" >&2\n  exit 2\nfi\nmkdir -p {out_dir}\n\n{{\n  echo \"timestamp=$(date +%Y%m%d_%H%M%S)\"\n  echo \"workload={workload}\"\n  echo \"binary={binary}\"\n  echo \"command={cmd}\"\n}} > {meta}\n\nsamply record --save-only -o {profile} -- /bin/bash -lc {cmd_q} >/dev/null 2>&1\n\necho \"remote samply complete: {profile}\"\n",
+        "set -euo pipefail\ncd {repo}\nif ! command -v samply >/dev/null 2>&1; then\n  echo \"ERROR: samply not found on remote host\" >&2\n  exit 2\nfi\nmkdir -p {out_dir}\n\n{{\n  echo \"timestamp=$(date +%Y%m%d_%H%M%S)\"\n  echo \"workload={workload}\"\n  echo \"binary={binary}\"\n  echo \"command={cmd}\"\n}} > {meta}\n\nsamply record --save-only -o {profile} -- /bin/bash -lc {cmd_q} >/dev/null 2>&1\n\necho \"remote samply complete: {profile}\"\n",
         repo = sh_quote(&opts.remote_repo),
         out_dir = sh_quote(&remote_out_dir),
         workload = opts.workload,

@@ -101,8 +101,8 @@ fn resolve_dataset_root(candidates: &[PathBuf], label: &str) -> Option<PathBuf> 
 fn validate_metadata_docs() -> bool {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let datasets_candidates = [
+        manifest.join("../../datasets/tefas"),
         manifest.join("../../../datasets/tefas"),
-        manifest.join("../../datasets"),
         manifest.join("../../../../../datasets/tefas"),
         manifest.join("../../../../../tefas/datasets"),
     ];
@@ -303,8 +303,8 @@ fn compare_fundpage_datasets() {
 
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
     let root_candidates = [
+        manifest.join("../../datasets/tefas/fundpage"),
         manifest.join("../../../datasets/tefas/fundpage"),
-        manifest.join("../../datasets/fundpage"),
         manifest.join("../../../../../datasets/tefas/fundpage"),
         manifest.join("../../../../../tefas/datasets/fundpage"),
     ];
