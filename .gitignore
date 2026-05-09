@@ -1,0 +1,20 @@
+# Rust build artifacts
+/target/
+**/*.rs.bk
+
+# Cargo local config (keep workspace-level config in repo)
+.cargo/config.local.toml
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Python artifacts (bindings)
+__pycache__/
+*.py[cod]
