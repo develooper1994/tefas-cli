@@ -1,0 +1,57 @@
+{
+  "indicator": {
+    "fon_adi": "EML",
+    "son_fiyat_tl": 1.172297,
+    "gunluk_getiri_pct": 0.2086,
+    "pay_adet": 36615643,
+    "allocation": [
+      {
+        "name": "Yabancı Hisse Senedi",
+        "value": 66.68
+      },
+      {
+        "name": "Hisse Senedi",
+        "value": 29.82
+      },
+      {
+        "name": "Ters-Repo",
+        "value": 2.33
+      },
+      {
+        "name": "Takasbank Para Piyasası",
+        "value": 1.17
+      }
+    ]
+  },
+  "profile": {
+    "fon_kodu": "Fon Kodu",
+    "isin_kodu": "TRYAKPO01904",
+    "platform_islem_durumu_raw": "TEFAS'ta işlem görüyor",
+    "islem_baslangic_saati_raw": "09.00",
+    "son_islem_saati_raw": "17.45",
+    "fon_alis_valoru_raw": "1",
+    "fon_alis_valoru": 1,
+    "fon_toplam_deger_tl": 42924408.78,
+    "kategori": "Değişken Fon",
+    "pazar_payi_raw_pct": 0.04,
+    "son_1yillik_kategori_derecesi_raw": "-/173",
+    "yatirimci_sayisi": 808,
+    "fon_satis_valoru_raw": "3",
+    "fon_satis_valoru": 3,
+    "min_alis_islem_miktari": 1,
+    "min_satis_islem_miktari": 1,
+    "max_alis_islem_miktari": 99000000000000000,
+    "max_satis_islem_miktari": 99000000000000000,
+    "giris_komisyonu_raw": "-",
+    "cikis_komisyonu_raw": "-",
+    "fon_faiz_icerigi_raw": "-",
+    "fon_risk_degeri": 3,
+    "kap_bilgi_adresi": "https://www.kap.org.tr/tr/fon-bilgileri/genel/eml-ak-portfoy-emlak-sektoru-degisken-fon",
+    "platform_islem_goruyor": true
+  },
+  "return": {
+    "son_1ay_getiri_pct": 9.541,
+    "son_3ay_getiri_pct": 11.6285,
+    "son_6ay_getiri_pct": 0.0
+  }
+}

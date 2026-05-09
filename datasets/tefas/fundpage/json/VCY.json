@@ -1,0 +1,64 @@
+{
+  "indicator": {
+    "fon_adi": "VCY",
+    "son_fiyat_tl": 3.287532,
+    "gunluk_getiri_pct": 0.1514,
+    "pay_adet": 46323585,
+    "allocation": [
+      {
+        "name": "Yabancı Hisse Senedi",
+        "value": 66.14
+      },
+      {
+        "name": "Hisse Senedi",
+        "value": 23.72
+      },
+      {
+        "name": "Ters-Repo",
+        "value": 5.3
+      },
+      {
+        "name": "Yatırım Fonları Katılma Payları",
+        "value": 4.77
+      },
+      {
+        "name": "Takasbank Para Piyasası",
+        "value": 0.07
+      }
+    ]
+  },
+  "profile": {
+    "fon_kodu": "Fon Kodu",
+    "isin_kodu": "TRYAKPO01185",
+    "platform_islem_durumu_raw": "TEFAS'ta işlem görüyor",
+    "islem_baslangic_saati_raw": "09.00",
+    "son_islem_saati_raw": "17.45",
+    "fon_alis_valoru_raw": "1",
+    "fon_alis_valoru": 1,
+    "fon_toplam_deger_tl": 152290290.78,
+    "kategori": "Değişken Fon",
+    "pazar_payi_raw_pct": 0.14,
+    "son_1yillik_kategori_derecesi_raw": "27/173",
+    "son_1yillik_kategori_derecesi": 27,
+    "yatirimci_sayisi": 12257,
+    "fon_satis_valoru_raw": "3",
+    "fon_satis_valoru": 3,
+    "min_alis_islem_miktari": 1,
+    "min_satis_islem_miktari": 1,
+    "max_alis_islem_miktari": 99000000000,
+    "max_satis_islem_miktari": 90000000000,
+    "giris_komisyonu_raw": "-",
+    "cikis_komisyonu_raw": "-",
+    "fon_faiz_icerigi_raw": "-",
+    "fon_risk_degeri": 6,
+    "kap_bilgi_adresi": "https://www.kap.org.tr/tr/fon-bilgileri/genel/vcy-ak-portfoy-elektrikli-ve-otonom-arac-teknolojileri-degisken-fon",
+    "platform_islem_goruyor": true
+  },
+  "return": {
+    "son_1ay_getiri_pct": 16.7858,
+    "son_3ay_getiri_pct": 7.9754,
+    "son_6ay_getiri_pct": 18.6172,
+    "son_1yil_getiri_pct": 70.0539,
+    "son_3yil_getiri_pct": 184.691
+  }
+}

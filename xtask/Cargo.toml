@@ -1,0 +1,29 @@
+[package]
+name = "xtask"
+version = "0.1.0"
+edition = "2024"
+publish = false
+
+[features]
+default = []
+fuzzing = ["dep:libfuzzer-sys", "dep:tefas-parser", "dep:tefas-network"]
+
+[dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+flate2 = { workspace = true }
+tefas-tools = { workspace = true }
+libfuzzer-sys = { workspace = true, optional = true }
+tefas-parser = { workspace = true, optional = true }
+tefas-network = { workspace = true, optional = true }
+
+[[bin]]
+name = "fuzz_parse_document"
+path = "src/bin/fuzz_parse_document.rs"
+required-features = ["fuzzing"]
+
+[[bin]]
+name = "fuzz_extract_hidden_fields"
+path = "src/bin/fuzz_extract_hidden_fields.rs"
+required-features = ["fuzzing"]

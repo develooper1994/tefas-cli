@@ -1,0 +1,8 @@
+PAYLOAD: {"yil":null,"hafta":null,"paraBirimi":"TL","raporTuru":"DEGER","dil":"TR"}
+Example curl to reproduce (no network call will be made):
+curl -s -X POST "https://www.tefas.gov.tr/api/statistics/befas/getBefasUyeBazliIslemHacmi" \
+  -H 'Content-Type: application/json' \
+  -H 'Origin: https://www.tefas.gov.tr' \
+  -H 'Referer: https://www.tefas.gov.tr/tr/befas-istatistikleri?tab=volume' \
+  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \
+  --data-raw '{"yil":null,"hafta":null,"paraBirimi":"TL","raporTuru":"DEGER","dil":"TR"}'

@@ -1,0 +1,81 @@
+{
+  "indicator": {
+    "fon_adi": "TLY",
+    "son_fiyat_tl": 5319.937078,
+    "gunluk_getiri_pct": 0.9286,
+    "pay_adet": 23932375,
+    "allocation": [
+      {
+        "name": "Hisse Senedi",
+        "value": 56.58
+      },
+      {
+        "name": "Ters-Repo",
+        "value": 25.88
+      },
+      {
+        "name": "Gayrimenkul Yatırım Fonları Katılma Payları",
+        "value": 10.31
+      },
+      {
+        "name": "Mevduat (TL)",
+        "value": 4.68
+      },
+      {
+        "name": "Finansman Bonosu",
+        "value": 2.89
+      },
+      {
+        "name": "Yatırım Fonları Katılma Payları",
+        "value": 1.68
+      },
+      {
+        "name": "Vadeli İşlemler Nakit Teminatları",
+        "value": 0.68
+      },
+      {
+        "name": "Özel Sektör Kira Sertifikaları",
+        "value": 0.1
+      },
+      {
+        "name": "Repo",
+        "value": -2.8
+      }
+    ]
+  },
+  "profile": {
+    "fon_kodu": "TLY",
+    "isin_kodu": "TRYTRPY00025",
+    "platform_islem_durumu_raw": "TEFAS'ta işlem görüyor",
+    "islem_baslangic_saati_raw": "09.00",
+    "son_islem_saati_raw": "17.45",
+    "fon_alis_valoru_raw": "1",
+    "fon_alis_valoru": 1,
+    "fon_toplam_deger_tl": 127318729121.71,
+    "kategori": "Serbest Fon",
+    "pazar_payi_raw_pct": 2.25,
+    "son_1yillik_kategori_derecesi_raw": "5/1.370",
+    "son_1yillik_kategori_derecesi": 5,
+    "yatirimci_sayisi": 83363,
+    "fon_satis_valoru_raw": "2",
+    "fon_satis_valoru": 2,
+    "min_alis_islem_miktari": 1,
+    "min_satis_islem_miktari": 1,
+    "max_alis_islem_miktari": 999999999,
+    "max_satis_islem_miktari": 999999999,
+    "giris_komisyonu_raw": "-",
+    "cikis_komisyonu_raw": "-",
+    "fon_faiz_icerigi_raw": "-",
+    "fon_risk_degeri": 7,
+    "kap_bilgi_adresi": "https://www.kap.org.tr/tr/fon-bilgileri/genel/tly-tera-portfoy-birinci-serbest-fon",
+    "platform_islem_goruyor": true
+  },
+  "return": {
+    "son_1ay_getiri_pct": 11.9923,
+    "son_3ay_getiri_pct": 56.1142,
+    "son_6ay_getiri_pct": 110.6878,
+    "son_1yil_getiri_pct": 1352.2043,
+    "son_3yil_getiri_pct": 59448.7837,
+    "son_5yil_getiri_pct": 517818.2437
+  }
+}

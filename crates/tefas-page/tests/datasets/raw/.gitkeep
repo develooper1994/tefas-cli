@@ -1,0 +1,3 @@
+# Dataset fixtures for tefas-parser integration tests.
+# Place *.html fund-page files alongside *_parsed.json expected output here
+# to have them picked up by compare_datasets and test_profile_parity.

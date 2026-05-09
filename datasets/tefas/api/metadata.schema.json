@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tefas.local/datasets/api/metadata.schema.json",
+  "title": "TEFAS API Dataset Metadata",
+  "type": "object",
+  "required": [
+    "dataset_version",
+    "generated_at",
+    "owner",
+    "endpoints"
+  ],
+  "properties": {
+    "dataset_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "endpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "path",
+          "capture_date",
+          "request_hash",
+          "response_sha256",
+          "response_schema_version"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "capture_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "request_hash": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "response_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "response_schema_version": {
+            "type": "string",
+            "minLength": 1
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

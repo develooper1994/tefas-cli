@@ -1,0 +1,57 @@
+{
+  "indicator": {
+    "fon_adi": "AFT",
+    "son_fiyat_tl": 0.944432,
+    "gunluk_getiri_pct": 0.6981,
+    "pay_adet": 27242938171,
+    "allocation": [
+      {
+        "name": "Yabancı Hisse Senedi",
+        "value": 99.37
+      },
+      {
+        "name": "Yatırım Fonları Katılma Payları",
+        "value": 0.46
+      },
+      {
+        "name": "Ters-Repo",
+        "value": 0.17
+      }
+    ]
+  },
+  "profile": {
+    "fon_kodu": "AFT",
+    "isin_kodu": "TRYAKBK00144",
+    "platform_islem_durumu_raw": "TEFAS'ta işlem görüyor",
+    "islem_baslangic_saati_raw": "09.00",
+    "son_islem_saati_raw": "17.45",
+    "fon_alis_valoru_raw": "1",
+    "fon_alis_valoru": 1,
+    "fon_toplam_deger_tl": 25729110082.8,
+    "kategori": "Hisse Senedi Fonu",
+    "pazar_payi_raw_pct": 11.65,
+    "son_1yillik_kategori_derecesi_raw": "15/187",
+    "son_1yillik_kategori_derecesi": 15,
+    "yatirimci_sayisi": 143592,
+    "fon_satis_valoru_raw": "2",
+    "fon_satis_valoru": 2,
+    "min_alis_islem_miktari": 1,
+    "min_satis_islem_miktari": 1,
+    "max_alis_islem_miktari": 99000000000,
+    "max_satis_islem_miktari": 90000000000,
+    "giris_komisyonu_raw": "-",
+    "cikis_komisyonu_raw": "-",
+    "fon_faiz_icerigi_raw": "-",
+    "fon_risk_degeri": 6,
+    "kap_bilgi_adresi": "https://www.kap.org.tr/tr/fon-bilgileri/genel/aft-ak-portfoy-yeni-teknolojiler-yabanci-hisse-senedi-fonu",
+    "platform_islem_goruyor": true
+  },
+  "return": {
+    "son_1ay_getiri_pct": 20.6613,
+    "son_3ay_getiri_pct": 15.2491,
+    "son_6ay_getiri_pct": 14.0182,
+    "son_1yil_getiri_pct": 79.6994,
+    "son_3yil_getiri_pct": 413.0524,
+    "son_5yil_getiri_pct": 872.7788
+  }
+}

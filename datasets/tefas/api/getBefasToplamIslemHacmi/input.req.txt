@@ -1,0 +1,8 @@
+PAYLOAD: {"basYil":null,"basAy":null,"basHafta":null,"bitYil":null,"bitAy":null,"bitHafta":null,"paraBirimi":"TL","dil":"TR"}
+Example curl to reproduce (no network call will be made):
+curl -s -X POST "https://www.tefas.gov.tr/api/statistics/befas/getBefasToplamIslemHacmi" \
+  -H 'Content-Type: application/json' \
+  -H 'Origin: https://www.tefas.gov.tr' \
+  -H 'Referer: https://www.tefas.gov.tr/tr/befas-istatistikleri?tab=volume' \
+  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \
+  --data-raw '{"basYil":null,"basAy":null,"basHafta":null,"bitYil":null,"bitAy":null,"bitHafta":null,"paraBirimi":"TL","dil":"TR"}'

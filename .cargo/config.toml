@@ -1,0 +1,9 @@
+[alias]
+xtask = "run -p xtask --bin xtask --"
+build-default = "build -p tefas-cli"
+check-default = "check -p tefas-cli"
+test-default = "test -p tefas-config -p tefas-network -p tefas-cli"
+bench-parser = "bench -p tefas-parser --bench parse_document_bench -- --warm-up-time 1 --measurement-time 3"
+bench-pipeline = "bench -p tefas-cli --bench fundpage_pipeline_bench"
+test-parser-gate = "test -p tefas-parser"
+test-parser-parity = "test -p tefas-parser --test compare_datasets"

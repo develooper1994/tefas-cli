@@ -1,0 +1,71 @@
+[workspace]
+members = [
+    "xtask",
+    "crates/tefas-core",
+    "crates/tefas-domain",
+    "crates/tefas-usecase",
+    "crates/tefas-network",
+    "crates/tefas-funds",
+    "crates/tefas-page",
+    "crates/tefas-lib",
+    "crates/tefas-ffi",
+    "crates/tefas-cli",
+    "crates/tefas-tools",
+    "crates/tefas-media",
+]
+default-members = [
+    "crates/tefas-cli",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+description = "Standalone Rust workspace for TEFAS data collection and CLI tooling"
+keywords = ["tefas", "takasbank", "finance", "cli", "fund"]
+categories = ["command-line-utilities", "web-programming::http-client"]
+
+[workspace.dependencies]
+aho-corasick = "1.1"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+chrono = { version = "0.4" }
+reqwest = { version = "0.12", default-features = false, features = ["json", "rustls-tls"] }
+wreq = { version = "5.3.0", features = ["cookies", "gzip", "brotli"] }
+http = "1"
+url = "2"
+hyper-tls = "0.6"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "process"] }
+clap = { version = "4", features = ["derive", "env"] }
+clap_complete = "4"
+base64 = "0.22"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+hyper = { version = "1", features = ["client", "http1", "http2"] }
+hyper-util = { version = "0.1", features = ["client", "client-legacy", "tokio", "http1", "http2"] }
+hyper-rustls = { version = "0.27", features = ["http1", "http2", "ring", "native-tokio"] }
+http-body-util = "0.1"
+bytes = "1"
+rustls = { version = "0.23", features = ["ring"] }
+once_cell = "1.21"
+regex = "1.7"
+tracing = "0.1"
+dirs = "5"
+criterion = { version = "0.5", features = ["html_reports"] }
+flate2 = "1"
+libfuzzer-sys = "0.4"
+axum = "0.8"
+tower-http = { version = "0.6", features = ["cors", "trace"] }
+tower = { version = "0.5", features = ["util"] }
+
+http-config = { path = "shared/crates/http-config" }
+http-client = { path = "shared/crates/http-client", default-features = false }
+image-util = { path = "shared/crates/image-util" }
+tefas-config = { path = "crates/tefas-core" }
+tefas-domain = { path = "crates/tefas-domain" }
+tefas-usecase = { path = "crates/tefas-usecase" }
+tefas-network = { path = "crates/tefas-network", default-features = false }
+tefas-api = { path = "crates/tefas-funds", default-features = false }
+tefas-parser = { path = "crates/tefas-page" }
+tefas-media = { path = "crates/tefas-media" }
+tefas = { package = "tefas-lib", path = "crates/tefas-lib", default-features = false }
+tefas-tools = { path = "crates/tefas-tools" }

@@ -1,0 +1,12 @@
+[
+  "base64Image",
+  "base64LogoImage",
+  "base64MobileImage",
+  "buttonText",
+  "description",
+  "endDate",
+  "imageAlt",
+  "startDate",
+  "title",
+  "url"
+]

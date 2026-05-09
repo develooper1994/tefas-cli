@@ -1,0 +1,64 @@
+{
+  "indicator": {
+    "fon_adi": "ZFB",
+    "son_fiyat_tl": 6.599638,
+    "gunluk_getiri_pct": 0.2849,
+    "pay_adet": 123687492,
+    "allocation": [
+      {
+        "name": "Yabancı Hisse Senedi",
+        "value": 64.63
+      },
+      {
+        "name": "Hisse Senedi",
+        "value": 21.2
+      },
+      {
+        "name": "Yatırım Fonları Katılma Payları",
+        "value": 11.64
+      },
+      {
+        "name": "Ters-Repo",
+        "value": 2.45
+      },
+      {
+        "name": "Takasbank Para Piyasası",
+        "value": 0.08
+      }
+    ]
+  },
+  "profile": {
+    "fon_kodu": "ZFB",
+    "isin_kodu": "TRYAKPO01060",
+    "platform_islem_durumu_raw": "TEFAS'ta işlem görüyor",
+    "islem_baslangic_saati_raw": "09.00",
+    "son_islem_saati_raw": "17.45",
+    "fon_alis_valoru_raw": "1",
+    "fon_alis_valoru": 1,
+    "fon_toplam_deger_tl": 816292614.06,
+    "kategori": "Değişken Fon",
+    "pazar_payi_raw_pct": 0.74,
+    "son_1yillik_kategori_derecesi_raw": "23/173",
+    "son_1yillik_kategori_derecesi": 23,
+    "yatirimci_sayisi": 16149,
+    "fon_satis_valoru_raw": "3",
+    "fon_satis_valoru": 3,
+    "min_alis_islem_miktari": 1,
+    "min_satis_islem_miktari": 1,
+    "max_alis_islem_miktari": 99000000000,
+    "max_satis_islem_miktari": 90000000000,
+    "giris_komisyonu_raw": "-",
+    "cikis_komisyonu_raw": "-",
+    "fon_faiz_icerigi_raw": "-",
+    "fon_risk_degeri": 6,
+    "kap_bilgi_adresi": "https://www.kap.org.tr/tr/fon-bilgileri/genel/zfb-ak-portfoy-fintek-ve-blokzinciri-teknolojileri-degisken-fon",
+    "platform_islem_goruyor": true
+  },
+  "return": {
+    "son_1ay_getiri_pct": 18.592,
+    "son_3ay_getiri_pct": 9.5445,
+    "son_6ay_getiri_pct": 19.7093,
+    "son_1yil_getiri_pct": 71.0991,
+    "son_3yil_getiri_pct": 511.2768
+  }
+}

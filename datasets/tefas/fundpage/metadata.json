@@ -1,0 +1,124 @@
+{
+  "dataset_version": "1.0.0",
+  "generated_at": "2026-05-07T17:11:02Z",
+  "owner": "tefas-team",
+  "parser_version": "v1",
+  "funds": [
+    {
+      "fund_code": "AC5",
+      "html_path": "datasets/fundpage/html/AC5.html",
+      "json_path": "datasets/fundpage/json/AC5.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "d585156ac0f4505c0a353931584e51135fd6e874ae00f4d8bc3f913389026767",
+      "expected_json_sha256": "b94129ff7facd7004141f70c10fe6c9f70b8d298e5d29110e0b84dcbcd7fb8f1"
+    }
+    ,
+    {
+      "fund_code": "ADE",
+      "html_path": "datasets/fundpage/html/ADE.html",
+      "json_path": "datasets/fundpage/json/ADE.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "b875c2915567357b96cb3836cdc5feb75859fe2be8829f967323afe8bf659e9a",
+      "expected_json_sha256": "71cf92d99f517aeec20654267c4ca28d7afb1bbbfcf39fbac2ce98f56608bfca"
+    }
+    ,
+    {
+      "fund_code": "AFT",
+      "html_path": "datasets/fundpage/html/AFT.html",
+      "json_path": "datasets/fundpage/json/AFT.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "182309bee43d172003f295b2d50e19fa6d9603c7c731317c2fdb1440b5d681e4",
+      "expected_json_sha256": "a8b935b957cd7cf7600cd67d8cb94d17aa0a2c04b9a36a89915ecf44d4068598"
+    }
+    ,
+    {
+      "fund_code": "AGC",
+      "html_path": "datasets/fundpage/html/AGC.html",
+      "json_path": "datasets/fundpage/json/AGC.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "4b64fe79e30346aeee51ac8d0ae61f7dee4c139300433079c0c5529fa27abdde",
+      "expected_json_sha256": "f952b47b2aaa7a25d5b40996425d89ffbdc2f712c37760d8a0ac4bc96192f0d5"
+    }
+    ,
+    {
+      "fund_code": "DGF",
+      "html_path": "datasets/fundpage/html/DGF.html",
+      "json_path": "datasets/fundpage/json/DGF.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "e03e7ffba5d8e88bfe99e8ea3ae2779c7d4e4340631f3f703475378173789897",
+      "expected_json_sha256": "2cfff1d2e679121f4dcdb659f42721f9aa24a49f1e637bd5fd5c8a0ca6e688b8"
+    }
+    ,
+    {
+      "fund_code": "DTZ",
+      "html_path": "datasets/fundpage/html/DTZ.html",
+      "json_path": "datasets/fundpage/json/DTZ.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "9cb264e6562b062c1aa63859a3abec06e9577e710c72fb57f5a0d00c8e20a11d",
+      "expected_json_sha256": "d89b807fb1ddf54f2c6c79cabf437e56e143cfe33e26b03111d574333dd8b89b"
+    }
+    ,
+    {
+      "fund_code": "EML",
+      "html_path": "datasets/fundpage/html/EML.html",
+      "json_path": "datasets/fundpage/json/EML.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "68b4b81d8fbbb5a555afbd049eba63c3c593d368f8c04de347c80971d958d2bc",
+      "expected_json_sha256": "0aa545133f9912288d149d28406312ba791a2ff76568deb039d445c082ac1e07"
+    }
+    ,
+    {
+      "fund_code": "MTV",
+      "html_path": "datasets/fundpage/html/MTV.html",
+      "json_path": "datasets/fundpage/json/MTV.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "f625f587c436fca2d03dfbd3c3fa1ae92741966568b8d06e44121da2c2e88cb9",
+      "expected_json_sha256": "99a302c7221644314463550bcf40696c4d32509ff1429652441fcdd200948726"
+    }
+    ,
+    {
+      "fund_code": "TAR",
+      "html_path": "datasets/fundpage/html/TAR.html",
+      "json_path": "datasets/fundpage/json/TAR.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "09862c5a3fd7713630a48cad3f6726cfeec82446a4b8b3453debd8904a89f4ea",
+      "expected_json_sha256": "ad2f17143a92687de54258d31abf176fc969139f0a7db383c8d09d8d7b5362e6"
+    }
+    ,
+    {
+      "fund_code": "TGR",
+      "html_path": "datasets/fundpage/html/TGR.html",
+      "json_path": "datasets/fundpage/json/TGR.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "9b3d6b63f5bf25380f9fc6ab15a93e91842dacd826206ec0721c61fda1f7ab0a",
+      "expected_json_sha256": "f9ee21a1b5f633338224dc308165298833323be4964a235bd3bb945654555d0f"
+    }
+    ,
+    {
+      "fund_code": "TLY",
+      "html_path": "datasets/fundpage/html/TLY.html",
+      "json_path": "datasets/fundpage/json/TLY.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "66f3863dd21168b489a4a1f014bf046f9b9395acca1c8984c17f4be09b36fd44",
+      "expected_json_sha256": "c5571258c9ec89c38734335ae7d02f4ceb8a46e3b035ed5e65d7bce8a3cd4290"
+    }
+    ,
+    {
+      "fund_code": "VCY",
+      "html_path": "datasets/fundpage/html/VCY.html",
+      "json_path": "datasets/fundpage/json/VCY.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "4061b4dc2ab3f25405c0d3f7f55d7ba91ef6c0d5a88833c7592be0ceca2bdfa1",
+      "expected_json_sha256": "5e796629a11cae62ef5283bddd3fdbec28d7dedf36291149b9c866eb5be4c7b8"
+    }
+    ,
+    {
+      "fund_code": "ZFB",
+      "html_path": "datasets/fundpage/html/ZFB.html",
+      "json_path": "datasets/fundpage/json/ZFB.json",
+      "capture_date": "2026-05-07",
+      "html_sha256": "d3fb4b586db038b2c7e6451f2df1c46f8439dd4691fbf823bd6e617860d2c84b",
+      "expected_json_sha256": "eb63c1c51c5f5b8cca2e5aa455c26e65c8a7571c1bb7f871b3ba5ab79a080dd9"
+    }
+  ]
+}

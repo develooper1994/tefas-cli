@@ -1,0 +1,67 @@
+{
+  "indicator": {
+    "fon_adi": "DGF",
+    "son_fiyat_tl": 1.280825,
+    "gunluk_getiri_pct": 0.0249,
+    "pay_adet": 19081930,
+    "allocation": [
+      {
+        "name": "Hisse Senedi",
+        "value": 27.6
+      },
+      {
+        "name": "Ters-Repo",
+        "value": 22.72
+      },
+      {
+        "name": "Takasbank Para Piyasası",
+        "value": 17.43
+      },
+      {
+        "name": "Finansman Bonosu",
+        "value": 12.2
+      },
+      {
+        "name": "Vadeli İşlemler Nakit Teminatları",
+        "value": 9.47
+      },
+      {
+        "name": "Devlet Tahvili",
+        "value": 8.37
+      },
+      {
+        "name": "Yatırım Fonları Katılma Payları",
+        "value": 2.21
+      }
+    ]
+  },
+  "profile": {
+    "fon_kodu": "Fon Kodu",
+    "isin_kodu": "TRYA1PS00158",
+    "platform_islem_durumu_raw": "TEFAS'ta işlem görüyor",
+    "islem_baslangic_saati_raw": "09.00",
+    "son_islem_saati_raw": "17.45",
+    "fon_alis_valoru_raw": "1",
+    "fon_alis_valoru": 1,
+    "fon_toplam_deger_tl": 24440620.84,
+    "kategori": "Değişken Fon",
+    "pazar_payi_raw_pct": 0.02,
+    "son_1yillik_kategori_derecesi_raw": "-/173",
+    "yatirimci_sayisi": 223,
+    "fon_satis_valoru_raw": "2",
+    "fon_satis_valoru": 2,
+    "min_alis_islem_miktari": 1,
+    "min_satis_islem_miktari": 1,
+    "giris_komisyonu_raw": "-",
+    "cikis_komisyonu_raw": "-",
+    "fon_faiz_icerigi_raw": "-",
+    "fon_risk_degeri": 5,
+    "kap_bilgi_adresi": "https://www.kap.org.tr/tr/fon-bilgileri/genel/dgf-a1-capital-portfoy-degisken-fon",
+    "platform_islem_goruyor": true
+  },
+  "return": {
+    "son_1ay_getiri_pct": 7.2866,
+    "son_3ay_getiri_pct": 2.1223,
+    "son_6ay_getiri_pct": 0.0
+  }
+}

@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tefas.local/datasets/fundpage/metadata.schema.json",
+  "title": "TEFAS Fundpage Dataset Metadata",
+  "type": "object",
+  "required": [
+    "dataset_version",
+    "generated_at",
+    "owner",
+    "funds"
+  ],
+  "properties": {
+    "dataset_version": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "owner": {
+      "type": "string",
+      "minLength": 1
+    },
+    "parser_version": {
+      "type": "string"
+    },
+    "funds": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "fund_code",
+          "html_path",
+          "json_path",
+          "capture_date",
+          "html_sha256",
+          "expected_json_sha256"
+        ],
+        "properties": {
+          "fund_code": {
+            "type": "string",
+            "minLength": 1
+          },
+          "html_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "json_path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "capture_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "html_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "expected_json_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,276 @@
+{
+  "dataset_version": "1.0.0",
+  "generated_at": "2026-05-07T17:11:02Z",
+  "owner": "tefas-team",
+  "endpoints": [
+    {
+      "name": "dagilimSiraliGetirT",
+      "path": "datasets/api/dagilimSiraliGetirT",
+      "capture_date": "2026-05-07",
+      "request_hash": "422a0170f6302c3fc299c33fa0c2eaa9c03dd8c9ce04a07354de3794e265a84c",
+      "response_sha256": "d7d18851128a1bbec8c8c953b35728205fd964091e51bc68759b1604d0ee37c9",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonBilgiGetir",
+      "path": "datasets/api/fonBilgiGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "ee21bacd7b4b9b7d782df323db0b8384c44bb87fccf6e8811188f35705c8e00b",
+      "response_sha256": "11d2b067364de8b5f314ae6c09e9f2966eb1ee585ccb4eeff1671b961b6158f1",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonBuyuklukBazliBilgiGetir",
+      "path": "datasets/api/fonBuyuklukBazliBilgiGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "5a92f3717ec979b17208732fc7afa2bfc65aca777d599d41c0dc992713eb5af7",
+      "response_sha256": "26c2aa799cb2564408bd297fa5fd64b07748e664469d0ff499e62aa57c6962f9",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonDetayGetir",
+      "path": "datasets/api/fonDetayGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "6164a2dbe35b77b37c654b3f755c3c79a0ad7212c2468512bd2a39d4c130c9da",
+      "response_sha256": "0a69cb68f8e8617d32c06a4eec5617c98085c5708b0ff434487ec2f9a896960e",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonFiyatBilgiGetir",
+      "path": "datasets/api/fonFiyatBilgiGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "b144d32cc9d21080507855eb806a1abbe8c5e32df6df7ebd017e3c565c1a4236",
+      "response_sha256": "326e134aebac818676a54b21ce0630037022d1f90a6815c71c0629b7f4d65542",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonGetiriBazliBilgiGetir",
+      "path": "datasets/api/fonGetiriBazliBilgiGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "c05277de5d86046fc946b07644d773600e5cc80d978c5adafd8e3737ccce4f0b",
+      "response_sha256": "4205a643839c02236f18a0fe7eee9546268203b47ed12c818fb263c2ec632402",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonGnlBlgSiraliGetir",
+      "path": "datasets/api/fonGnlBlgSiraliGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "7dd26ab041b6ab4f7c4dbb1e6b2185f098756c6cc873b081be80df3318b41239",
+      "response_sha256": "d0572b7ac8c744d57698a24ab070c2c63f10b8d4e51a9b1386da03bce25389b1",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonKurucuGetir",
+      "path": "datasets/api/fonKurucuGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "57142b72b0018862af5d2af66c87a2c6fe971d8feaac0a44b446962c45a00861",
+      "response_sha256": "73450c6d87aa5d8647d1a2ff4893c6b225d008e92d00bcb6f90f4e06d845f8ba",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonProfilDtyGetir",
+      "path": "datasets/api/fonProfilDtyGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "196e3ab980682ca3ebeef2548914f0f6eca8b3767d4c6061e08c2c67bce864fb",
+      "response_sha256": "4dd5901360b56ac1fe1f7ed6f62e2ffe629092f041d381e7b808fccbc5315e44",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonTefasDuyuruGetir",
+      "path": "datasets/api/fonTefasDuyuruGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "33e4756307941a6b984bc5e795abf6fa9fe687eb8a6216e2012ce641745948fc",
+      "response_sha256": "b8afc8117e3c5c2be4582758239b98420bd7eab28b7f0a662386f5d0a19022a1",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonTipiGetir",
+      "path": "datasets/api/fonTipiGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "9633890baad806bc237a17cb0cebeda996f4f4745bd165c736b2e33a6b05fbe1",
+      "response_sha256": "18f4f076eefb373eea439decfbb273aa85cccd05337f934fd1cc0b8928de217e",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonTurDnmGetiriGetir",
+      "path": "datasets/api/fonTurDnmGetiriGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "f6b8628a9d329ecc995ce0d7ccf03c270a0f88873de1198ee81ae266ead02a74",
+      "response_sha256": "2a5ecbd1d2ed51b6786d8c98746c1509d19c40a95bb020bc9739a82e55481747",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonUnvanAra",
+      "path": "datasets/api/fonUnvanAra",
+      "capture_date": "2026-05-07",
+      "request_hash": "d0722f826b087976bf58deee97016c208a796489b0670308098a0b497a26cc58",
+      "response_sha256": "a78b8f7d6f12296e1e2f53abe133d538759073de8f7a9cbbb79050bdd259606f",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonUnvanGetir",
+      "path": "datasets/api/fonUnvanGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "5cf0bad15cc5d1fefa3b52929eba1d0db92e548938332fdb551f6a5e761ee6da",
+      "response_sha256": "37b9c296d14853fd5655bb1bebccfac64efd7f89a70b7968330466df11582814",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "fonYonetimBazliBilgiGetir",
+      "path": "datasets/api/fonYonetimBazliBilgiGetir",
+      "capture_date": "2026-05-07",
+      "request_hash": "167352beb2535b52a48ec84202652a617005006105a86526140a46651227fc0d",
+      "response_sha256": "1666503e5ace6e460b73597cd999482c0f81f428242abbb6cb04dcd697a65e0c",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getBanners",
+      "path": "datasets/api/getBanners",
+      "capture_date": "2026-05-07",
+      "request_hash": "41d905d2c07cf0e41c688e1da716b32949083913ff435f270c3618f897349866",
+      "response_sha256": "4d75f811e3cfa9e549908cdfba15a8db15a2d6896399f1f99c146609f02e8edb",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getBefasFonTurBazliIslemHacmi",
+      "path": "datasets/api/getBefasFonTurBazliIslemHacmi",
+      "capture_date": "2026-05-07",
+      "request_hash": "ffc4b22aa58c613810a47d679f1f835b31dba9377c3d877cdabc1d54c57df715",
+      "response_sha256": "7bb1027f8e68fb9f68281c391e1007bf6a5d1a0404e715ea2e5826ec287f6d61",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getBefasFonTuruBazindaFonSayisi",
+      "path": "datasets/api/getBefasFonTuruBazindaFonSayisi",
+      "capture_date": "2026-05-07",
+      "request_hash": "f634441c817732f2c7062d39e14982371a52047d837b6f65ac500c06deb1e1df",
+      "response_sha256": "10da4c7f1e0710352ec5d34b9a9a3e5c2f83b9c17764405165c254a66446390a",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getBefasToplamIslemHacmi",
+      "path": "datasets/api/getBefasToplamIslemHacmi",
+      "capture_date": "2026-05-07",
+      "request_hash": "63cf56f0f98d25965d98b181eaa0074958b73ea679518bdc48774b54a8c768b2",
+      "response_sha256": "bc70b171939ac9a8d9cbb4883bdb3920f7ce15ce541a0ecf179a854ad53e159a",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getBefasUyeBazliIslemHacmi",
+      "path": "datasets/api/getBefasUyeBazliIslemHacmi",
+      "capture_date": "2026-05-07",
+      "request_hash": "6d650079ac2833c1f8c2a4d9d3056afd711a7918bd517759e2ae3de3d92d5c69",
+      "response_sha256": "11bc5c53ac065914474258ab9d6c6ba8bf3b2bae8104c943f3b8732d153bab5e",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplDovizList",
+      "path": "datasets/api/getFplDovizList",
+      "capture_date": "2026-05-07",
+      "request_hash": "1601374f164114eb952d4d53aa3ad520cfaceb9c874947c6f0b652e5c06944e0",
+      "response_sha256": "2a0938fa74d74187539d508c136ebe625ad17423a5e7efa068ce3ec5e7008ef5",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplFonBazliIslemHacmi",
+      "path": "datasets/api/getFplFonBazliIslemHacmi",
+      "capture_date": "2026-05-07",
+      "request_hash": "db98609f1b3079d6003e7c78677482faf1a6215455b707dc1f83853d6b719e6c",
+      "response_sha256": "e239b34f0811729911e959c6a1a84797c861a79a9e21498c648c6251cc79f924",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplFonList",
+      "path": "datasets/api/getFplFonList",
+      "capture_date": "2026-05-07",
+      "request_hash": "2eeb5503fadb1da3c874ef3207cf61c71232b072b7dde1cc40e6a4b38a847fff",
+      "response_sha256": "808487e03fc1d509ded705644063a82d180016d65eea6d7a320de99acb7069d6",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplFonTuruBazindaFonSayisi",
+      "path": "datasets/api/getFplFonTuruBazindaFonSayisi",
+      "capture_date": "2026-05-07",
+      "request_hash": "3f4e23e47cfd44f946fd3c3e321fa45f4d3a44bf3016133ee53fc5b220a7226f",
+      "response_sha256": "99fac1c19c2ab88d72414d2a85b991ca64cf6d67e02772e1ff0b18b78e553149",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplHaftaList",
+      "path": "datasets/api/getFplHaftaList",
+      "capture_date": "2026-05-07",
+      "request_hash": "676a0a581621532ba55d94af0229c99923909163dcc850ac001d1242dce88e4d",
+      "response_sha256": "5bcddcdb87eb2c95cc5b069d6d3bed8c7f89e6a9879ca2d657908ae120be9a56",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplIslemYapanKurumAdet",
+      "path": "datasets/api/getFplIslemYapanKurumAdet",
+      "capture_date": "2026-05-07",
+      "request_hash": "82403fa92cf59f7793a259a2de432f0265509ef76d8e3ef668e2964c36d0543a",
+      "response_sha256": "88bdacbc0386d496ac6524238ad95bd46b158ad560bd5d03276a20e3cd62f8f0",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplMkkStokBakiye",
+      "path": "datasets/api/getFplMkkStokBakiye",
+      "capture_date": "2026-05-07",
+      "request_hash": "ce62f407603085160da53f47fa3e9927173015e6b00f907bcb38f1363a44e3e2",
+      "response_sha256": "4ceca423ea3080a8ad8b69222b8da6cb2654a9ae38d9feed7fc815181962e61b",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplToplamIslemHacmi",
+      "path": "datasets/api/getFplToplamIslemHacmi",
+      "capture_date": "2026-05-07",
+      "request_hash": "084f1629d8fc7815c1cf828b169ecb73a76c3e2faa7c26a30d5277b8a8944380",
+      "response_sha256": "31b2b52db99f9953b0bf02e8d9dca5e6038b8ea725a46043c2bf9dbc8e60c0bc",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getFplUyeBazliIslemHacmi",
+      "path": "datasets/api/getFplUyeBazliIslemHacmi",
+      "capture_date": "2026-05-07",
+      "request_hash": "a69e7c99c7f9f8cdfbe4ffe453c941a72bb5a3fe14280a0e9a6f3fb354a7aa56",
+      "response_sha256": "2059b6fc6f87cb03ef82878669d3bec728f08513b6cced6bc97ea7d334f6a66c",
+      "response_schema_version": "v1"
+    }
+    ,
+    {
+      "name": "getLogo",
+      "path": "datasets/api/getLogo",
+      "capture_date": "2026-05-07",
+      "request_hash": "f1126b631f825595a63d5d78249cb22c703c02108cc635c724e46abc1c053ef7",
+      "response_sha256": "862d74141d49ac7b69795fdaae48b4651e5bb8b15192c17e128f6fe90e8a856c",
+      "response_schema_version": "v1"
+    }
+  ]
+}

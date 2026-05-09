@@ -1,0 +1,4 @@
+PAYLOAD: {"fonTipi":"YAT","fonKodu":null,"aramaMetni":null,"fonTurKod":null,"fonGrubu":null,"sfonTurKod":null,"basTarih":"20260401","bitTarih":"20260426","basSira":1,"bitSira":33986,"fonTurAciklama":null,"dil":"TR","kurucuKod":null}
+Example curl to reproduce (no network call will be made):
+curl -s -X POST "https://www.tefas.gov.tr/api/funds/fonGnlBlgSiraliGetir" \
+  -H 'Content-Type: application/json; charset=UTF-8' \n  -H 'Origin: https://www.tefas.gov.tr' \n  -H 'Referer: https://www.tefas.gov.tr/tr/fon-verileri?fundType=YAT&startDate=20260401&endDate=20260426' \n  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \n  --data-raw '{"fonTipi":"YAT","fonKodu":null,"aramaMetni":null,"fonTurKod":null,"

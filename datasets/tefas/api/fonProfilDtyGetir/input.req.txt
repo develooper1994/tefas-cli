@@ -1,0 +1,4 @@
+PAYLOAD: {"dil":"TR","fonKodu":"","periyod":12,"kf1kod":null,"kf2kod":null,"kf3kod":null,"kf4kod":null,"kf5kod":null}
+Example curl to reproduce (no network call will be made):
+curl -s -X POST "https://www.tefas.gov.tr/api/funds/fonProfilDtyGetir" \
+  -H 'Content-Type: application/json; charset=UTF-8' \n  -H 'Origin: https://www.tefas.gov.tr' \n  -H 'Referer: https://www.tefas.gov.tr/tr' \n  -H 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36' \n  --data-raw '{"dil":"TR","fonKodu":"","periyod":12,"kf1kod":null,"kf2kod":null,"kf3kod":null,"kf4kod":null,"kf5kod":null}'

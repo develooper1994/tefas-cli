@@ -1,0 +1,14 @@
+[package]
+name = "tefas-network"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+http-client = { workspace = true }
+
+[features]
+default = ["hyper-backend", "wreq-backend", "tefas-compat"]
+tefas-compat = ["http-client/tefas-compat"]
+native-tls = ["http-client/native-tls"]
+hyper-backend = ["http-client/hyper-backend"]
+wreq-backend = ["http-client/wreq-backend"]

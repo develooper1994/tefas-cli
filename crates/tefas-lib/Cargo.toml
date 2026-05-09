@@ -1,0 +1,27 @@
+[package]
+name = "tefas-lib"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+name = "tefas"
+path = "src/lib.rs"
+
+[features]
+default = ["tefas-compat", "hyper-backend", "wreq-backend"]
+tefas-compat = ["tefas-network/tefas-compat"]
+native-tls = ["tefas-network/native-tls"]
+hyper-backend = ["tefas-network/hyper-backend"]
+wreq-backend = ["tefas-network/wreq-backend"]
+
+[dependencies]
+anyhow = { workspace = true }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+tefas-config = { workspace = true }
+tefas-domain = { workspace = true }
+tefas-usecase = { workspace = true }
+tefas-api = { workspace = true }
+tefas-network = { workspace = true }
+tefas-parser = { workspace = true }
+tefas-media = { workspace = true }
