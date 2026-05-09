@@ -37,7 +37,8 @@ fn main() {
     println!("cargo:rerun-if-changed=src/lib.rs");
     println!("cargo:rerun-if-env-changed=CBINDGEN");
 
-    let crate_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string()));
+    let crate_dir =
+        PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_else(|_| ".".to_string()));
     let cfg = crate_dir.join("cbindgen.toml");
     let out = crate_dir.join("include/tefas_ffi.h");
 

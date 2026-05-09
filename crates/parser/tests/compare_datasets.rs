@@ -69,10 +69,7 @@ fn compare_json(expected: &Value, actual: &Value) -> Result<(), String> {
 
 fn strict_dataset_mode() -> bool {
     std::env::var("CI").ok().as_deref() == Some("true")
-        || std::env::var("TEFAS_STRICT_DATASET_PARITY")
-            .ok()
-            .as_deref()
-            == Some("1")
+        || std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1")
 }
 
 fn resolve_dataset_root(candidates: &[PathBuf], label: &str) -> Option<PathBuf> {
@@ -106,7 +103,8 @@ fn validate_metadata_docs() -> bool {
         manifest.join("../../../../../datasets"),
         manifest.join("../../../../../tefas/datasets"),
     ];
-    let Some(datasets_root) = resolve_dataset_root(&datasets_candidates, "validate_metadata_docs") else {
+    let Some(datasets_root) = resolve_dataset_root(&datasets_candidates, "validate_metadata_docs")
+    else {
         return false;
     };
 
@@ -209,10 +207,7 @@ fn compare_datasets() {
                 .collect::<Vec<_>>()
                 .join(", ");
             let strict_mode = std::env::var("CI").ok().as_deref() == Some("true")
-                || std::env::var("TEFAS_STRICT_DATASET_PARITY")
-                    .ok()
-                    .as_deref()
-                    == Some("1");
+                || std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1");
             if strict_mode {
                 panic!(
                     "compare_datasets: strict modda datasets/raw fixture dizini bulunamadi. Kontrol edilen yollar: {}",
@@ -229,9 +224,13 @@ fn compare_datasets() {
 
     let mut html_file_count = 0usize;
     let mut failures = Vec::new();
-    for entry in fs::read_dir(&dir)
-        .unwrap_or_else(|e| panic!("compare_datasets: read_dir basarisiz ({}): {}", dir.display(), e))
-    {
+    for entry in fs::read_dir(&dir).unwrap_or_else(|e| {
+        panic!(
+            "compare_datasets: read_dir basarisiz ({}): {}",
+            dir.display(),
+            e
+        )
+    }) {
         let entry =
             entry.unwrap_or_else(|e| panic!("compare_datasets: dir entry okunamadi: {}", e));
         let path = entry.path();
@@ -249,8 +248,13 @@ fn compare_datasets() {
                 );
                 continue;
             }
-            let html = fs::read_to_string(&path)
-                .unwrap_or_else(|e| panic!("compare_datasets: html okunamadi ({}): {}", path.display(), e));
+            let html = fs::read_to_string(&path).unwrap_or_else(|e| {
+                panic!(
+                    "compare_datasets: html okunamadi ({}): {}",
+                    path.display(),
+                    e
+                )
+            });
             let (grouped, _flat) = parse_document(&html);
             let expected_v: Value =
                 serde_json::from_str(&fs::read_to_string(&expected).unwrap_or_else(|e| {

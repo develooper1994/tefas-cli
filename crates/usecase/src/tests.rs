@@ -51,22 +51,14 @@ fn fundpage_defaults_to_two() {
 
 #[test]
 fn fetch_uses_backend_default_when_not_requested() {
-    let req = FetchBatchRequest::new(
-        vec!["https://www.tefas.gov.tr".to_string()],
-        None,
-        4,
-    );
+    let req = FetchBatchRequest::new(vec!["https://www.tefas.gov.tr".to_string()], None, 4);
     let plan = build_fetch_batch_plan(req);
     assert_eq!(plan.concurrency, 4);
 }
 
 #[test]
 fn fetch_requested_concurrency_overrides_backend_default() {
-    let req = FetchBatchRequest::new(
-        vec!["https://www.tefas.gov.tr".to_string()],
-        Some(7),
-        2,
-    );
+    let req = FetchBatchRequest::new(vec!["https://www.tefas.gov.tr".to_string()], Some(7), 2);
     let plan = build_fetch_batch_plan(req);
     assert_eq!(plan.concurrency, 7);
 }

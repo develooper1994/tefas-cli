@@ -1,7 +1,7 @@
 use std::fs;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tefas_tools::{install_with_fallback, InstallOptions};
+use tefas_tools::{InstallOptions, install_with_fallback};
 
 fn unique_temp_dir(prefix: &str) -> PathBuf {
     let nanos = SystemTime::now()

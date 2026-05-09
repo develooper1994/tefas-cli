@@ -63,12 +63,12 @@ use http::header::{
     USER_AGENT,
 };
 use http::header::{HeaderMap, HeaderName, HeaderValue};
+use http_config::{HttpBackend, RetryConfig, TlsBackend, TlsConfig};
 use serde_json::Value;
 use std::fmt;
 use std::fs;
 use std::sync::atomic::Ordering;
 use std::time::Duration;
-use http_config::{HttpBackend, RetryConfig, TlsBackend, TlsConfig};
 #[cfg(feature = "tefas-compat")]
 use tefas_config::AppConfig;
 use tokio::time::{sleep, timeout};

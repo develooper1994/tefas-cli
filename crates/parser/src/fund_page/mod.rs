@@ -207,7 +207,10 @@ fn clean_whitespace(s: Option<&str>) -> String {
             }
             if trimmed.len() == without_comments.len()
                 && !trimmed.contains("  ")
-                && !trimmed.as_bytes().iter().any(|b| matches!(b, b'\n' | b'\r' | b'\t'))
+                && !trimmed
+                    .as_bytes()
+                    .iter()
+                    .any(|b| matches!(b, b'\n' | b'\r' | b'\t'))
             {
                 return trimmed.to_string();
             }
@@ -261,10 +264,7 @@ fn strip_html_comments(s: &str) -> std::borrow::Cow<'_, str> {
     let mut out: Option<String> = None;
 
     while i + 3 < bytes.len() {
-        if bytes[i] == b'<'
-            && bytes[i + 1] == b'!'
-            && bytes[i + 2] == b'-'
-            && bytes[i + 3] == b'-'
+        if bytes[i] == b'<' && bytes[i + 1] == b'!' && bytes[i + 2] == b'-' && bytes[i + 3] == b'-'
         {
             let mut end = i + 4;
             let mut found_close = false;
@@ -373,7 +373,10 @@ fn decode_html_entities(s: &str) -> String {
 }
 
 fn parse_json_string_literal(raw: &str) -> Option<String> {
-    if raw.len() >= 2 && raw.as_bytes().first() == Some(&b'"') && raw.as_bytes().last() == Some(&b'"') {
+    if raw.len() >= 2
+        && raw.as_bytes().first() == Some(&b'"')
+        && raw.as_bytes().last() == Some(&b'"')
+    {
         let inner = &raw[1..raw.len() - 1];
         if !inner.as_bytes().contains(&b'\\') {
             return Some(inner.to_string());
@@ -482,9 +485,7 @@ where
                 k += 1;
             }
             k
-        } else if bytes[k..].starts_with(b"null") {
-            k + 4
-        } else if bytes[k..].starts_with(b"true") {
+        } else if bytes[k..].starts_with(b"null") || bytes[k..].starts_with(b"true") {
             k + 4
         } else if bytes[k..].starts_with(b"false") {
             k + 5
@@ -499,7 +500,6 @@ where
         i = value_end;
     }
 }
-
 
 fn extract_kap_link(text: &str) -> Option<String> {
     KAP_LINK_RE
@@ -719,10 +719,9 @@ fn for_each_json_string_literal_filtered(
                     let literal = &text[start..i + 1];
                     if let Some(decoded) = parse_json_string_literal(literal)
                         && !decoded.trim().is_empty()
+                        && !callback(decoded)
                     {
-                        if !callback(decoded) {
-                            return;
-                        }
+                        return;
                     }
                 }
                 break;
@@ -791,12 +790,20 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
                 "isinKodu" if isin_kodu_tok.is_none() => isin_kodu_tok = Some(span),
                 "isin" if isin_tok.is_none() => isin_tok = Some(span),
                 "kapLink" if kap_link_tok.is_none() => kap_link_tok = Some(span),
-                "fonToplamDeger" if fon_toplam_deger_tok.is_none() => fon_toplam_deger_tok = Some(span),
-                "fonToplamDegerTl" if fon_toplam_deger_tl_tok.is_none() => fon_toplam_deger_tl_tok = Some(span),
-                "fundTotalValue" if fund_total_value_tok.is_none() => fund_total_value_tok = Some(span),
+                "fonToplamDeger" if fon_toplam_deger_tok.is_none() => {
+                    fon_toplam_deger_tok = Some(span)
+                }
+                "fonToplamDegerTl" if fon_toplam_deger_tl_tok.is_none() => {
+                    fon_toplam_deger_tl_tok = Some(span)
+                }
+                "fundTotalValue" if fund_total_value_tok.is_none() => {
+                    fund_total_value_tok = Some(span)
+                }
                 "pazarPayi" if pazar_payi_tok.is_none() => pazar_payi_tok = Some(span),
                 "marketShare" if market_share_tok.is_none() => market_share_tok = Some(span),
-                "fonRiskDegeri" if fon_risk_degeri_tok.is_none() => fon_risk_degeri_tok = Some(span),
+                "fonRiskDegeri" if fon_risk_degeri_tok.is_none() => {
+                    fon_risk_degeri_tok = Some(span)
+                }
                 "riskValue" if risk_value_tok.is_none() => risk_value_tok = Some(span),
                 _ => {}
             }
@@ -965,11 +972,7 @@ fn format_tr_thousands(n: i64) -> String {
         }
         out.push(ch);
     }
-    if n < 0 {
-        format!("-{out}")
-    } else {
-        out
-    }
+    if n < 0 { format!("-{out}") } else { out }
 }
 
 fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
@@ -1013,15 +1016,25 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
             let span = (vs, ve);
             match key {
                 "tefasDurum" if tefas_durum_tok.is_none() => tefas_durum_tok = Some(span),
-                "platformStatus" if platform_status_tok.is_none() => platform_status_tok = Some(span),
+                "platformStatus" if platform_status_tok.is_none() => {
+                    platform_status_tok = Some(span)
+                }
                 "basIsSaat" if bas_is_saat_tok.is_none() => bas_is_saat_tok = Some(span),
                 "tradeStartTime" if trade_start_tok.is_none() => trade_start_tok = Some(span),
                 "sonIsSaat" if son_is_saat_tok.is_none() => son_is_saat_tok = Some(span),
                 "tradeEndTime" if trade_end_tok.is_none() => trade_end_tok = Some(span),
-                "fonGeriAlisValor" if fon_geri_alis_valor_tok.is_none() => fon_geri_alis_valor_tok = Some(span),
-                "fundPurchaseValue" if fund_purchase_value_tok.is_none() => fund_purchase_value_tok = Some(span),
-                "fonSatisValor" if fon_satis_valor_tok.is_none() => fon_satis_valor_tok = Some(span),
-                "fundSaleValue" if fund_sale_value_tok.is_none() => fund_sale_value_tok = Some(span),
+                "fonGeriAlisValor" if fon_geri_alis_valor_tok.is_none() => {
+                    fon_geri_alis_valor_tok = Some(span)
+                }
+                "fundPurchaseValue" if fund_purchase_value_tok.is_none() => {
+                    fund_purchase_value_tok = Some(span)
+                }
+                "fonSatisValor" if fon_satis_valor_tok.is_none() => {
+                    fon_satis_valor_tok = Some(span)
+                }
+                "fundSaleValue" if fund_sale_value_tok.is_none() => {
+                    fund_sale_value_tok = Some(span)
+                }
                 "minAlis" if min_alis_tok.is_none() => min_alis_tok = Some(span),
                 "minPurchaseAmount" if min_purchase_tok.is_none() => min_purchase_tok = Some(span),
                 "minSatis" if min_satis_tok.is_none() => min_satis_tok = Some(span),
@@ -1034,15 +1047,27 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
                 "investorCount" if investor_count_tok.is_none() => investor_count_tok = Some(span),
                 "fonKategori" if fon_kategori_tok.is_none() => fon_kategori_tok = Some(span),
                 "fundCategory" if fund_category_tok.is_none() => fund_category_tok = Some(span),
-                "kategoriDerece" if kategori_derece_tok.is_none() => kategori_derece_tok = Some(span),
-                "fundCategoryDegree" if fund_category_degree_tok.is_none() => fund_category_degree_tok = Some(span),
-                "kategoriFonSay" if kategori_fon_say_tok.is_none() => kategori_fon_say_tok = Some(span),
+                "kategoriDerece" if kategori_derece_tok.is_none() => {
+                    kategori_derece_tok = Some(span)
+                }
+                "fundCategoryDegree" if fund_category_degree_tok.is_none() => {
+                    fund_category_degree_tok = Some(span)
+                }
+                "kategoriFonSay" if kategori_fon_say_tok.is_none() => {
+                    kategori_fon_say_tok = Some(span)
+                }
                 "girisKomisyonu" if giris_kom_tok.is_none() => giris_kom_tok = Some(span),
-                "entranceCommission" if entrance_commission_tok.is_none() => entrance_commission_tok = Some(span),
+                "entranceCommission" if entrance_commission_tok.is_none() => {
+                    entrance_commission_tok = Some(span)
+                }
                 "cikisKomisyonu" if cikis_kom_tok.is_none() => cikis_kom_tok = Some(span),
-                "exitCommission" if exit_commission_tok.is_none() => exit_commission_tok = Some(span),
+                "exitCommission" if exit_commission_tok.is_none() => {
+                    exit_commission_tok = Some(span)
+                }
                 "faizIcerigi" if faiz_icerigi_tok.is_none() => faiz_icerigi_tok = Some(span),
-                "interestContent" if interest_content_tok.is_none() => interest_content_tok = Some(span),
+                "interestContent" if interest_content_tok.is_none() => {
+                    interest_content_tok = Some(span)
+                }
                 _ => {}
             }
             true
@@ -1089,7 +1114,10 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
             && let Some(v) = parse_s(bas_is_saat_tok).or_else(|| parse_s(trade_start_tok))
             && !v.is_empty()
         {
-            out.insert("islem_baslangic_saati_raw".to_string(), Value::String(v.clone()));
+            out.insert(
+                "islem_baslangic_saati_raw".to_string(),
+                Value::String(v.clone()),
+            );
             out.insert("islem_baslangic_saati".to_string(), Value::String(v));
         }
 
@@ -1106,13 +1134,27 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
                 return;
             }
             let v = match candidates {
-                ["fonGeriAlisValor", "fundPurchaseValue"] => parse_n(fon_geri_alis_valor_tok).or_else(|| parse_n(fund_purchase_value_tok)),
-                ["fonSatisValor", "fundSaleValue"] => parse_n(fon_satis_valor_tok).or_else(|| parse_n(fund_sale_value_tok)),
-                ["minAlis", "minPurchaseAmount"] => parse_n(min_alis_tok).or_else(|| parse_n(min_purchase_tok)),
-                ["minSatis", "minSaleAmount"] => parse_n(min_satis_tok).or_else(|| parse_n(min_sale_tok)),
-                ["maxAlis", "maxPurchaseAmount"] => parse_n(max_alis_tok).or_else(|| parse_n(max_purchase_tok)),
-                ["maxSatis", "maxSaleAmount"] => parse_n(max_satis_tok).or_else(|| parse_n(max_sale_tok)),
-                ["yatirimciSayi", "investorCount"] => parse_n(yatirimci_sayi_tok).or_else(|| parse_n(investor_count_tok)),
+                ["fonGeriAlisValor", "fundPurchaseValue"] => {
+                    parse_n(fon_geri_alis_valor_tok).or_else(|| parse_n(fund_purchase_value_tok))
+                }
+                ["fonSatisValor", "fundSaleValue"] => {
+                    parse_n(fon_satis_valor_tok).or_else(|| parse_n(fund_sale_value_tok))
+                }
+                ["minAlis", "minPurchaseAmount"] => {
+                    parse_n(min_alis_tok).or_else(|| parse_n(min_purchase_tok))
+                }
+                ["minSatis", "minSaleAmount"] => {
+                    parse_n(min_satis_tok).or_else(|| parse_n(min_sale_tok))
+                }
+                ["maxAlis", "maxPurchaseAmount"] => {
+                    parse_n(max_alis_tok).or_else(|| parse_n(max_purchase_tok))
+                }
+                ["maxSatis", "maxSaleAmount"] => {
+                    parse_n(max_satis_tok).or_else(|| parse_n(max_sale_tok))
+                }
+                ["yatirimciSayi", "investorCount"] => {
+                    parse_n(yatirimci_sayi_tok).or_else(|| parse_n(investor_count_tok))
+                }
                 _ => None,
             };
             if let Some(v) = v {
@@ -1122,7 +1164,10 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
             }
         };
 
-        insert_i64("fon_alis_valoru", &["fonGeriAlisValor", "fundPurchaseValue"]);
+        insert_i64(
+            "fon_alis_valoru",
+            &["fonGeriAlisValor", "fundPurchaseValue"],
+        );
         insert_i64("fon_satis_valoru", &["fonSatisValor", "fundSaleValue"]);
         insert_i64("min_alis_islem_miktari", &["minAlis", "minPurchaseAmount"]);
         insert_i64("min_satis_islem_miktari", &["minSatis", "minSaleAmount"]);
@@ -1591,8 +1636,7 @@ struct PLabelLookup<'a> {
     pairs: &'a std::collections::HashMap<String, String>,
     p_pairs: &'a std::collections::HashMap<String, String>,
     p_pairs_norm: &'a std::cell::OnceCell<std::collections::HashMap<String, String>>,
-    fallback_label_values:
-        &'a std::cell::OnceCell<std::collections::HashMap<&'static str, String>>,
+    fallback_label_values: &'a std::cell::OnceCell<std::collections::HashMap<&'static str, String>>,
 }
 
 impl<'a> PLabelLookup<'a> {
@@ -1910,15 +1954,12 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
     } else {
         // Modern layout: reuse precomputed label/value pairs (single-pass extraction).
         for (klabel, kval, klabel_norm) in PROFILE_MAPPING_NORMALIZED.iter() {
-            let right = p_pairs
-                .get(*klabel)
-                .cloned()
-                .or_else(|| {
-                    p_pairs_norm
-                        .get_or_init(|| build_normalized_pairs(&p_pairs))
-                        .get(klabel_norm)
-                        .cloned()
-                });
+            let right = p_pairs.get(*klabel).cloned().or_else(|| {
+                p_pairs_norm
+                    .get_or_init(|| build_normalized_pairs(&p_pairs))
+                    .get(klabel_norm)
+                    .cloned()
+            });
             if let Some(right) = right {
                 apply_profile_value(kval, &right, None);
             }
@@ -2142,21 +2183,17 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
     if !res.contains_key("pazar_payi_raw_pct")
         && let Some(val) = next_p_value_after_label(text, "Pazar Payı", true)
         && !val.is_empty()
+        && let Some(n) = parse_number_tr(Some(&val))
     {
-        if let Some(n) = parse_number_tr(Some(&val)) {
-            res.insert(
-                "pazar_payi_raw_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(n).unwrap()),
-            );
-        }
+        res.insert(
+            "pazar_payi_raw_pct".to_string(),
+            Value::Number(serde_json::Number::from_f64(n).unwrap()),
+        );
     }
 
     if !res.contains_key("platform_islem_durumu_raw")
-        && let Some(val) = next_p_value_after_any_label(
-            text,
-            &["Platform Durumu", "Platform İşlem Durumu"],
-            false,
-        )
+        && let Some(val) =
+            next_p_value_after_any_label(text, &["Platform Durumu", "Platform İşlem Durumu"], false)
         && !val.is_empty()
     {
         let decoded = decode_html_entities(&val);
@@ -2164,10 +2201,7 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
             "platform_islem_durumu_raw".to_string(),
             Value::String(decoded.clone()),
         );
-        res.insert(
-            "platform_islem_durumu".to_string(),
-            Value::String(decoded),
-        );
+        res.insert("platform_islem_durumu".to_string(), Value::String(decoded));
     }
 
     // Fallback: capture 'Son 1 Yıllık Kategori Derecesi' if not present
@@ -2345,8 +2379,9 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
                                     // try to parse series: [...] inside
                                     if let Some(m2) = SERIES_INIT_RE.find(astr) {
                                         let br = m2.end() - 1;
-                                        if let Some((slice2, _)) = parse_balanced(astr, br, '[', ']')
-                                            && let Some(v2) = try_parse(&slice2)
+                                        if let Some((slice2, _)) =
+                                            parse_balanced(astr, br, '[', ']')
+                                            && let Some(v2) = try_parse(slice2)
                                         {
                                             return Some(json!({"series": v2}));
                                         }

@@ -32,7 +32,9 @@ fn main() -> Result<()> {
             let mut passthrough: Vec<String> = args.collect();
             match legacy {
                 "pgo" | "lint" | "probe" | "bench" | "profile" | "perf-remote"
-                | "samply-remote" => tefas::run(&workspace_root, legacy, std::mem::take(&mut passthrough)),
+                | "samply-remote" => {
+                    tefas::run(&workspace_root, legacy, std::mem::take(&mut passthrough))
+                }
                 _ => bail!("unknown xtask command: {legacy}"),
             }
         }

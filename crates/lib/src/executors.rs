@@ -72,7 +72,10 @@ pub async fn run_fundpage_batch(
             Ok((code, result)) => results.push((code, result)),
             Err(e) => {
                 // Join errors have no associated code; surface as a nameless error entry
-                results.push(("(unknown)".to_string(), Err(anyhow::anyhow!("task join error: {e}"))));
+                results.push((
+                    "(unknown)".to_string(),
+                    Err(anyhow::anyhow!("task join error: {e}")),
+                ));
             }
         }
     }
@@ -184,7 +187,10 @@ pub async fn run_fetch_batch(
     for h in handles {
         match h.await {
             Ok((url, result)) => results.push((url, result)),
-            Err(e) => results.push(("(unknown)".to_string(), Err(anyhow::anyhow!("task join error: {e}")))),
+            Err(e) => results.push((
+                "(unknown)".to_string(),
+                Err(anyhow::anyhow!("task join error: {e}")),
+            )),
         }
     }
     results

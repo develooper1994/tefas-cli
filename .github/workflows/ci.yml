@@ -2,43 +2,51 @@ name: CI
 
 on:
   push:
-    branches: ["main"]
+    branches: [main]
   pull_request:
-    branches: ["main"]
-  workflow_dispatch:
-
-concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
-  rust-ci:
-    name: Rust CI
-    runs-on: ubuntu-latest
-
+  rust-lint-test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      CI: "true"
+      TEFAS_STRICT_DATASET_PARITY: "1"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          components: rustfmt, clippy
+      - name: Install system deps (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck
 
-      - name: Cache cargo artifacts
+      - name: Install system deps (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          brew install shellcheck
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
-      - name: Cargo check
-        run: cargo check --workspace
-
-      - name: Cargo fmt
+      - name: Rust fmt
         run: cargo fmt --all -- --check
 
-      - name: Cargo clippy
+      - name: Rust clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
 
-      - name: Cargo test
+      - name: Rust tests
         run: cargo test --workspace
+
+      - name: Shellcheck
+        run: cargo xtask tefas lint
+
+      - name: CLI dry-run fuzz smoke
+        run: cargo xtask tefas fuzz --dry-run

@@ -252,16 +252,15 @@ fn test_cli_fundpage_multiple() {
 
 #[test]
 fn test_cli_fundpage_with_concurrency() {
-    let cli = Cli::try_parse_from(["tefas", "--concurrency", "6", "fundpage", "AC5", "TLY"])
-        .unwrap();
+    let cli =
+        Cli::try_parse_from(["tefas", "--concurrency", "6", "fundpage", "AC5", "TLY"]).unwrap();
     assert_eq!(cli.global.concurrency, Some(6));
 }
 
 #[test]
 fn test_cli_fundpage_with_network_concurrency() {
     let cli =
-        Cli::try_parse_from(["tefas", "--network-concurrency", "5", "fundpage", "AC5"])
-            .unwrap();
+        Cli::try_parse_from(["tefas", "--network-concurrency", "5", "fundpage", "AC5"]).unwrap();
     assert_eq!(cli.global.network_concurrency, Some(5));
 }
 
@@ -306,16 +305,14 @@ fn test_cli_fetch_basic() {
 
 #[test]
 fn test_cli_parse_with_concurrency() {
-    let cli = Cli::try_parse_from(["tefas", "--concurrency", "3", "parse", "TAR.html"])
-        .unwrap();
+    let cli = Cli::try_parse_from(["tefas", "--concurrency", "3", "parse", "TAR.html"]).unwrap();
     assert_eq!(cli.global.concurrency, Some(3));
 }
 
 #[test]
 fn test_cli_parse_with_parse_concurrency() {
     let cli =
-        Cli::try_parse_from(["tefas", "--parse-concurrency", "7", "parse", "TAR.html"])
-            .unwrap();
+        Cli::try_parse_from(["tefas", "--parse-concurrency", "7", "parse", "TAR.html"]).unwrap();
     assert_eq!(cli.global.parse_concurrency, Some(7));
 }
 
@@ -744,8 +741,15 @@ fn test_cli_parse_fields_flag() {
 fn test_resolve_parse_input_path_finds_shared_fixture_without_cwd_assumption() {
     let resolved = resolve_parse_input_path("AC5.html").unwrap();
     assert!(resolved.exists());
-    assert_eq!(resolved.file_name().and_then(|name| name.to_str()), Some("AC5.html"));
-    assert!(resolved.to_string_lossy().contains("datasets/fundpage/html"));
+    assert_eq!(
+        resolved.file_name().and_then(|name| name.to_str()),
+        Some("AC5.html")
+    );
+    assert!(
+        resolved
+            .to_string_lossy()
+            .contains("datasets/fundpage/html")
+    );
 }
 
 #[test]

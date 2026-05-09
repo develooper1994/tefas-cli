@@ -77,14 +77,7 @@ impl TefasClient {
             .collect::<Vec<_>>();
 
         let plan = build_fundpage_batch_plan(request);
-        run_fundpage_batch(
-            &self.client,
-            &self.base_url,
-            jobs,
-            plan.concurrency,
-            quiet,
-        )
-        .await
+        run_fundpage_batch(&self.client, &self.base_url, jobs, plan.concurrency, quiet).await
     }
 
     /// CLI-equivalent fundpage workflow with explicit jobs (supports HTML save destinations).
@@ -95,15 +88,9 @@ impl TefasClient {
         quiet: bool,
     ) -> Vec<(String, anyhow::Result<Value>)> {
         let codes = jobs.iter().map(|job| job.code.clone()).collect::<Vec<_>>();
-        let plan = build_fundpage_batch_plan(FundpageBatchRequest::new(codes, requested_concurrency));
-        run_fundpage_batch(
-            &self.client,
-            &self.base_url,
-            jobs,
-            plan.concurrency,
-            quiet,
-        )
-        .await
+        let plan =
+            build_fundpage_batch_plan(FundpageBatchRequest::new(codes, requested_concurrency));
+        run_fundpage_batch(&self.client, &self.base_url, jobs, plan.concurrency, quiet).await
     }
 
     /// Query by explicit enum operations.
@@ -120,11 +107,9 @@ impl TefasClient {
         let operation_names = operations
             .iter()
             .map(|op| QueryOperationName::new(op.to_possible_value().expect("value").get_name()))
-            .chain(
-                legacy_operations
-                    .iter()
-                    .map(|op| QueryOperationName::new(op.to_possible_value().expect("value").get_name())),
-            )
+            .chain(legacy_operations.iter().map(|op| {
+                QueryOperationName::new(op.to_possible_value().expect("value").get_name())
+            }))
             .collect::<Vec<_>>();
 
         self.query_by_names(
@@ -155,7 +140,11 @@ impl TefasClient {
 
             match resolved {
                 AnyOperation::New(op) => {
-                    let name = op.to_possible_value().expect("value").get_name().to_string();
+                    let name = op
+                        .to_possible_value()
+                        .expect("value")
+                        .get_name()
+                        .to_string();
                     if !seen_names.insert(name.clone()) {
                         continue;
                     }
@@ -172,7 +161,11 @@ impl TefasClient {
                     });
                 }
                 AnyOperation::Old(op) => {
-                    let name = op.to_possible_value().expect("value").get_name().to_string();
+                    let name = op
+                        .to_possible_value()
+                        .expect("value")
+                        .get_name()
+                        .to_string();
                     if !seen_names.insert(name.clone()) {
                         continue;
                     }

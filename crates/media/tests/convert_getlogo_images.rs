@@ -3,7 +3,7 @@ use std::fs;
 use std::io::Cursor;
 use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
-use tefas_media::{convert_getlogo_to_images, ImageOutputFormat};
+use tefas_media::{ImageOutputFormat, convert_getlogo_to_images};
 
 fn unique_temp_dir(prefix: &str) -> PathBuf {
     let nanos = SystemTime::now()

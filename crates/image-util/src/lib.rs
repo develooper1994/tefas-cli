@@ -143,7 +143,10 @@ pub fn convert_base64_records_to_images(
         };
 
         if let Err(err) = save_result {
-            eprintln!("[{idx}] Failed saving {ext} image for '{}': {err}", rec.name);
+            eprintln!(
+                "[{idx}] Failed saving {ext} image for '{}': {err}",
+                rec.name
+            );
             stats.errors += 1;
             continue;
         }

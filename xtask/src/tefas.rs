@@ -58,7 +58,9 @@ impl RemotePipelineOpts {
             measurement_time: env::var("MEASUREMENT_TIME").unwrap_or_else(|_| "3".to_string()),
             warmup_time: env::var("WARMUP_TIME").unwrap_or_else(|_| "1".to_string()),
             run_samply: env::var("RUN_SAMPLY").map(|v| v != "0").unwrap_or(true),
-            run_flamegraph: env::var("RUN_FLAMEGRAPH").map(|v| v == "1").unwrap_or(false),
+            run_flamegraph: env::var("RUN_FLAMEGRAPH")
+                .map(|v| v == "1")
+                .unwrap_or(false),
             profile_name: env::var("PROFILE_NAME").unwrap_or_else(|_| "profileDebug".to_string()),
             cainfo: env::var("CARGO_HTTP_CAINFO").unwrap_or_default(),
         }
@@ -285,16 +287,25 @@ fn run_remote_pipeline(workspace_root: &Path, opts: &RemotePipelineOpts) -> Resu
         );
     }
 
-    let remote_profile_bin = format!("{}/target/perf-bin/{}/tefas-cli", opts.remote_repo, opts.profile_name);
+    let remote_profile_bin = format!(
+        "{}/target/perf-bin/{}/tefas-cli",
+        opts.remote_repo, opts.profile_name
+    );
     run_checked(
         Command::new("ssh").arg(&opts.remote_alias).arg(format!(
             "mkdir -p {}",
-            sh_quote(&format!("{}/target/perf-bin/{}", opts.remote_repo, opts.profile_name))
+            sh_quote(&format!(
+                "{}/target/perf-bin/{}",
+                opts.remote_repo, opts.profile_name
+            ))
         )),
         "prepare remote perf-bin directory",
     )?;
 
-    println!("Deploying binary to {}:{}", opts.remote_alias, remote_profile_bin);
+    println!(
+        "Deploying binary to {}:{}",
+        opts.remote_alias, remote_profile_bin
+    );
     run_checked(
         Command::new("rsync")
             .arg("-az")
@@ -304,7 +315,12 @@ fn run_remote_pipeline(workspace_root: &Path, opts: &RemotePipelineOpts) -> Resu
     )?;
 
     let ts = timestamp_string();
-    let out_dir = format!("{}/target/perf-artifacts/{}/{}", opts.remote_repo, opts.profile_bucket(), ts);
+    let out_dir = format!(
+        "{}/target/perf-artifacts/{}/{}",
+        opts.remote_repo,
+        opts.profile_bucket(),
+        ts
+    );
 
     let remote_script = format!(
         "set -euo pipefail\ncd {repo}\n\nif [[ ! -d datasets/fundpage/html ]] || [[ -z \"$(find datasets/fundpage/html -maxdepth 1 -type f -name '*.html' | head -n 1)\" ]]; then\n  echo \"ERROR: datasets/fundpage/html is missing on remote host.\" >&2\n  exit 2\nfi\n\nif [[ ! -x {bin} ]]; then\n  echo \"ERROR: remote prebuilt binary not found: {bin}\" >&2\n  exit 2\nfi\n\nOUT_DIR={out_dir}\nmkdir -p \"$OUT_DIR/parsed\"\n\nmapfile -t HTML_FILES < <(find datasets/fundpage/html -maxdepth 1 -type f -name '*.html' | sort)\nHTML_COUNT=\"${{#HTML_FILES[@]}}\"\nif [[ \"$HTML_COUNT\" -eq 0 ]]; then\n  echo \"ERROR: no HTML files found in datasets/fundpage/html\" >&2\n  exit 2\nfi\n\nWORKLOAD_CMD='for f in datasets/fundpage/html/*.html; do {bin} parse \"$f\" >/dev/null; done'\n{{\n  echo \"profile={profile}\"\n  echo \"bucket={bucket}\"\n  echo \"workload=all_dataset_pages\"\n  echo \"html_count=$HTML_COUNT\"\n  echo \"filter={filter}\"\n  echo \"measure={measure}\"\n  echo \"warmup={warmup}\"\n}} > \"$OUT_DIR/run_meta.txt\"\n\nfor f in datasets/fundpage/html/*.html; do\n  b=\"$(basename \"$f\" .html)\"\n  {bin} parse \"$f\" > \"$OUT_DIR/parsed/${{b}}.txt\"\ndone\n\nif command -v perf >/dev/null 2>&1; then\n  perf stat -o \"$OUT_DIR/perf_stat.txt\" -- /bin/bash -lc \"$WORKLOAD_CMD\" > /dev/null 2>&1\n  perf record -F 199 --call-graph dwarf --output \"$OUT_DIR/perf.data\" -- /bin/bash -lc \"$WORKLOAD_CMD\"\n  perf report --stdio --no-children --percent-limit 0.05 --sort overhead,symbol -i \"$OUT_DIR/perf.data\" > \"$OUT_DIR/perf_report.txt\"\nelse\n  echo \"WARN: perf not found on remote host\" > \"$OUT_DIR/perf_report.txt\"\nfi\n\nif [[ {run_samply} == '1' ]] && command -v samply >/dev/null 2>&1; then\n  samply record --save-only -o \"$OUT_DIR/profile.json.gz\" -- /bin/bash -lc \"$WORKLOAD_CMD\" > /dev/null 2>&1 || true\nfi\n\necho \"remote perf complete: $OUT_DIR\"\n",
@@ -385,11 +401,17 @@ fn run_remote_samply(workspace_root: &Path, opts: &RemoteSamplyOpts) -> Result<(
         bail!("local profile binary not found: {}", local_bin.display());
     }
 
-    let remote_bin = format!("{}/target/perf-bin/{}/tefas-cli", opts.remote_repo, opts.profile_name);
+    let remote_bin = format!(
+        "{}/target/perf-bin/{}/tefas-cli",
+        opts.remote_repo, opts.profile_name
+    );
     run_checked(
         Command::new("ssh").arg(&opts.remote_alias).arg(format!(
             "mkdir -p {}",
-            sh_quote(&format!("{}/target/perf-bin/{}", opts.remote_repo, opts.profile_name))
+            sh_quote(&format!(
+                "{}/target/perf-bin/{}",
+                opts.remote_repo, opts.profile_name
+            ))
         )),
         "prepare remote perf-bin directory",
     )?;
@@ -404,7 +426,10 @@ fn run_remote_samply(workspace_root: &Path, opts: &RemoteSamplyOpts) -> Result<(
     )?;
 
     let ts = timestamp_string();
-    let remote_out_dir = format!("{}/target/perf-artifacts/samply/{}_{}", opts.remote_repo, opts.workload, ts);
+    let remote_out_dir = format!(
+        "{}/target/perf-artifacts/samply/{}_{}",
+        opts.remote_repo, opts.workload, ts
+    );
     let remote_profile = format!("{}/profile.json.gz", remote_out_dir);
     let remote_meta = format!("{}/run_meta.txt", remote_out_dir);
 
@@ -474,7 +499,11 @@ fn run_remote_samply(workspace_root: &Path, opts: &RemoteSamplyOpts) -> Result<(
 }
 
 fn run_pgo(workspace_root: &Path, args: Vec<String>) -> Result<()> {
-    let action = args.first().map(String::as_str).unwrap_or("help").to_string();
+    let action = args
+        .first()
+        .map(String::as_str)
+        .unwrap_or("help")
+        .to_string();
     let pgo_data_dir = env::var("TEFAS_PGO_DATA_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|_| env::temp_dir().join("tefas-pgo-data"));
@@ -498,7 +527,10 @@ fn run_pgo(workspace_root: &Path, args: Vec<String>) -> Result<()> {
                     .arg("-p")
                     .arg("tefas-cli")
                     .arg("--release")
-                    .env("RUSTFLAGS", format!("-Cprofile-generate={}", pgo_data_dir.display()))
+                    .env(
+                        "RUSTFLAGS",
+                        format!("-Cprofile-generate={}", pgo_data_dir.display()),
+                    )
                     .current_dir(workspace_root),
                 "cargo build (PGO generate)",
             )?;
@@ -547,7 +579,10 @@ fn run_pgo(workspace_root: &Path, args: Vec<String>) -> Result<()> {
                     .arg("-p")
                     .arg("tefas-cli")
                     .arg("--release")
-                    .env("RUSTFLAGS", format!("-Cprofile-use={}", profdata_file.display()))
+                    .env(
+                        "RUSTFLAGS",
+                        format!("-Cprofile-use={}", profdata_file.display()),
+                    )
                     .current_dir(workspace_root),
                 "cargo build (PGO use)",
             )?;
@@ -560,7 +595,9 @@ fn run_pgo(workspace_root: &Path, args: Vec<String>) -> Result<()> {
                 })?;
             }
             run_checked(
-                Command::new("cargo").arg("clean").current_dir(workspace_root),
+                Command::new("cargo")
+                    .arg("clean")
+                    .current_dir(workspace_root),
                 "cargo clean",
             )?;
         }
@@ -598,7 +635,9 @@ fn run_lint(workspace_root: &Path) -> Result<()> {
 }
 
 fn collect_shell_scripts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
-    for entry in fs::read_dir(dir).with_context(|| format!("failed to read dir: {}", dir.display()))? {
+    for entry in
+        fs::read_dir(dir).with_context(|| format!("failed to read dir: {}", dir.display()))?
+    {
         let entry = entry?;
         let path = entry.path();
         let file_type = entry.file_type()?;
@@ -778,7 +817,11 @@ fn resolve_impersonate_binary() -> Option<PathBuf> {
         }
     }
 
-    for cmd in ["curl_chrome136", "curl_chrome116", "curl-impersonate-chrome"] {
+    for cmd in [
+        "curl_chrome136",
+        "curl_chrome116",
+        "curl-impersonate-chrome",
+    ] {
         if command_exists(cmd) {
             return Some(PathBuf::from(cmd));
         }
@@ -835,19 +878,48 @@ fn run_fuzz(workspace_root: &Path, args: Vec<String>) -> Result<()> {
     }
 
     let operations = [
-        "dagilimSiraliGetirT", "fonBilgiGetir", "fonBuyuklukBazliBilgiGetir", "fonDetayGetir",
-        "fonFiyatBilgiGetir", "fonGetiriBazliBilgiGetir", "fonGnlBlgSiraliGetir", "fonKurucuGetir",
-        "fonProfilDtyGetir", "fonTefasDuyuruGetir", "fonTipiGetir", "fonTurDnmGetiriGetir",
-        "fonUnvanAra", "fonUnvanGetir", "fonYonetimBazliBilgiGetir", "getBanners",
-        "getBefasFonTurBazliIslemHacmi", "getBefasFonTuruBazindaFonSayisi", "getBefasToplamIslemHacmi",
-        "getBefasUyeBazliIslemHacmi", "getFplDovizList", "getFplFonBazliIslemHacmi", "getFplFonList",
-        "getFplFonTuruBazindaFonSayisi", "getFplHaftaList", "getFplIslemYapanKurumAdet", "getFplMkkStokBakiye",
-        "getFplToplamIslemHacmi", "getFplUyeBazliIslemHacmi", "getLogo", "isShowedPopup", "validate",
+        "dagilimSiraliGetirT",
+        "fonBilgiGetir",
+        "fonBuyuklukBazliBilgiGetir",
+        "fonDetayGetir",
+        "fonFiyatBilgiGetir",
+        "fonGetiriBazliBilgiGetir",
+        "fonGnlBlgSiraliGetir",
+        "fonKurucuGetir",
+        "fonProfilDtyGetir",
+        "fonTefasDuyuruGetir",
+        "fonTipiGetir",
+        "fonTurDnmGetiriGetir",
+        "fonUnvanAra",
+        "fonUnvanGetir",
+        "fonYonetimBazliBilgiGetir",
+        "getBanners",
+        "getBefasFonTurBazliIslemHacmi",
+        "getBefasFonTuruBazindaFonSayisi",
+        "getBefasToplamIslemHacmi",
+        "getBefasUyeBazliIslemHacmi",
+        "getFplDovizList",
+        "getFplFonBazliIslemHacmi",
+        "getFplFonList",
+        "getFplFonTuruBazindaFonSayisi",
+        "getFplHaftaList",
+        "getFplIslemYapanKurumAdet",
+        "getFplMkkStokBakiye",
+        "getFplToplamIslemHacmi",
+        "getFplUyeBazliIslemHacmi",
+        "getLogo",
+        "isShowedPopup",
+        "validate",
     ];
     let old_ops = [
-        "bindChartData", "bindComparisonFundReturns", "bindComparisonFundSizes",
-        "bindComparisonManagementFees", "bindHistoryAllocation", "bindHistoryInfo",
-        "getAllFundAnalyzeData", "getAllFunds",
+        "bindChartData",
+        "bindComparisonFundReturns",
+        "bindComparisonFundSizes",
+        "bindComparisonManagementFees",
+        "bindHistoryAllocation",
+        "bindHistoryInfo",
+        "getAllFundAnalyzeData",
+        "getAllFunds",
     ];
     let backend_tls = [
         ("reqwest", "rustls"),
@@ -929,18 +1001,89 @@ fn run_test_manual(workspace_root: &Path, args: Vec<String>) -> Result<()> {
     let case = args.first().map(String::as_str).unwrap_or("fpl-toplam");
     let cli = workspace_root.join("target/debug/tefas-cli");
     if !cli.exists() {
-        bail!("Binary not found at {} — run 'cargo build -p tefas-cli' first", cli.display());
+        bail!(
+            "Binary not found at {} — run 'cargo build -p tefas-cli' first",
+            cli.display()
+        );
     }
     match case {
         "fpl-toplam" => {
-            run_checked(Command::new(&cli).arg("query").arg("getFplToplamIslemHacmi").arg("--set").arg("basYil=2026").arg("--set").arg("basHafta=01").arg("--set").arg("bitYil=2026").arg("--set").arg("bitHafta=02"), "manual test fpl-toplam #1")?;
-            run_checked(Command::new(&cli).arg("query").arg("getFplToplamIslemHacmi").arg("--set").arg("basYil=2026").arg("--set").arg("basHafta=01").arg("--set").arg("bitYil=2026").arg("--set").arg("bitHafta=02").arg("--set").arg("paraBirimi=USD"), "manual test fpl-toplam #2")?;
-            run_checked(Command::new(&cli).arg("query").arg("getFplToplamIslemHacmi").arg("--set").arg("basYil=2026").arg("--set").arg("basHafta=01").arg("--set").arg("bitYil=2026").arg("--set").arg("bitHafta=02").arg("--set").arg("paraBirimi=EUR"), "manual test fpl-toplam #3")?;
+            run_checked(
+                Command::new(&cli)
+                    .arg("query")
+                    .arg("getFplToplamIslemHacmi")
+                    .arg("--set")
+                    .arg("basYil=2026")
+                    .arg("--set")
+                    .arg("basHafta=01")
+                    .arg("--set")
+                    .arg("bitYil=2026")
+                    .arg("--set")
+                    .arg("bitHafta=02"),
+                "manual test fpl-toplam #1",
+            )?;
+            run_checked(
+                Command::new(&cli)
+                    .arg("query")
+                    .arg("getFplToplamIslemHacmi")
+                    .arg("--set")
+                    .arg("basYil=2026")
+                    .arg("--set")
+                    .arg("basHafta=01")
+                    .arg("--set")
+                    .arg("bitYil=2026")
+                    .arg("--set")
+                    .arg("bitHafta=02")
+                    .arg("--set")
+                    .arg("paraBirimi=USD"),
+                "manual test fpl-toplam #2",
+            )?;
+            run_checked(
+                Command::new(&cli)
+                    .arg("query")
+                    .arg("getFplToplamIslemHacmi")
+                    .arg("--set")
+                    .arg("basYil=2026")
+                    .arg("--set")
+                    .arg("basHafta=01")
+                    .arg("--set")
+                    .arg("bitYil=2026")
+                    .arg("--set")
+                    .arg("bitHafta=02")
+                    .arg("--set")
+                    .arg("paraBirimi=EUR"),
+                "manual test fpl-toplam #3",
+            )?;
         }
         "fpl-fonturu" => {
-            run_checked(Command::new(&cli).arg("query").arg("getFplFonTuruBazindaFonSayisi").arg("--set").arg("yil=2025"), "manual test fpl-fonturu #1")?;
-            run_checked(Command::new(&cli).arg("query").arg("getFplFonTuruBazindaFonSayisi").arg("--set").arg("yil=2025").arg("--set").arg("ay=01"), "manual test fpl-fonturu #2")?;
-            run_checked(Command::new(&cli).arg("query").arg("getFplFonTuruBazindaFonSayisi").arg("--set").arg("yil=2025").arg("--set").arg("hafta=07"), "manual test fpl-fonturu #3")?;
+            run_checked(
+                Command::new(&cli)
+                    .arg("query")
+                    .arg("getFplFonTuruBazindaFonSayisi")
+                    .arg("--set")
+                    .arg("yil=2025"),
+                "manual test fpl-fonturu #1",
+            )?;
+            run_checked(
+                Command::new(&cli)
+                    .arg("query")
+                    .arg("getFplFonTuruBazindaFonSayisi")
+                    .arg("--set")
+                    .arg("yil=2025")
+                    .arg("--set")
+                    .arg("ay=01"),
+                "manual test fpl-fonturu #2",
+            )?;
+            run_checked(
+                Command::new(&cli)
+                    .arg("query")
+                    .arg("getFplFonTuruBazindaFonSayisi")
+                    .arg("--set")
+                    .arg("yil=2025")
+                    .arg("--set")
+                    .arg("hafta=07"),
+                "manual test fpl-fonturu #3",
+            )?;
         }
         other => bail!("unknown test-manual case: {other}. expected fpl-toplam|fpl-fonturu"),
     }
@@ -950,14 +1093,17 @@ fn run_test_manual(workspace_root: &Path, args: Vec<String>) -> Result<()> {
 fn run_ssh_setup(args: Vec<String>) -> Result<()> {
     let mut remote_host = env::var("REMOTE_HOST").unwrap_or_else(|_| "192.168.238.128".to_string());
     let mut remote_user = env::var("REMOTE_USER").unwrap_or_else(|_| "developer".to_string());
-    let mut ssh_key = env::var("SSH_KEY").unwrap_or_else(|_| format!("{}/.ssh/id_ed25519", env::var("HOME").unwrap_or_default()));
+    let mut ssh_key = env::var("SSH_KEY")
+        .unwrap_or_else(|_| format!("{}/.ssh/id_ed25519", env::var("HOME").unwrap_or_default()));
     let mut ssh_alias = env::var("SSH_ALIAS").unwrap_or_else(|_| "tefas-vm-ip".to_string());
 
     let mut i = 0usize;
     while i < args.len() {
         match args[i].as_str() {
             "--host" => {
-                let Some(v) = args.get(i + 1) else { bail!("--host requires user@host") };
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--host requires user@host")
+                };
                 if let Some((u, h)) = v.split_once('@') {
                     remote_user = u.to_string();
                     remote_host = h.to_string();
@@ -966,15 +1112,36 @@ fn run_ssh_setup(args: Vec<String>) -> Result<()> {
                 }
                 i += 2;
             }
-            "--key" => { ssh_key = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--key requires value"))?; i += 2; }
-            "--alias" => { ssh_alias = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--alias requires value"))?; i += 2; }
+            "--key" => {
+                ssh_key = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--key requires value"))?;
+                i += 2;
+            }
+            "--alias" => {
+                ssh_alias = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--alias requires value"))?;
+                i += 2;
+            }
             other => bail!("Unknown option: {other}"),
         }
     }
 
     let key_path = PathBuf::from(&ssh_key);
     if !key_path.exists() {
-        run_checked(Command::new("ssh-keygen").arg("-t").arg("ed25519").arg("-f").arg(&ssh_key).arg("-N").arg(""), "ssh-keygen")?;
+        run_checked(
+            Command::new("ssh-keygen")
+                .arg("-t")
+                .arg("ed25519")
+                .arg("-f")
+                .arg(&ssh_key)
+                .arg("-N")
+                .arg(""),
+            "ssh-keygen",
+        )?;
     }
     run_checked(
         Command::new("ssh-copy-id")
@@ -995,46 +1162,140 @@ fn run_ssh_setup(args: Vec<String>) -> Result<()> {
         content.push_str(&format!("\nHost {alias}\n    HostName {host}\n    User {user}\n    IdentityFile {key}\n    ServerAliveInterval 60\n", alias=ssh_alias, host=remote_host, user=remote_user, key=ssh_key));
         fs::write(&cfg, content)?;
     }
-    run_checked(Command::new("ssh").arg("-o").arg("BatchMode=yes").arg(&ssh_alias).arg("echo OK"), "verify passwordless ssh")
+    run_checked(
+        Command::new("ssh")
+            .arg("-o")
+            .arg("BatchMode=yes")
+            .arg(&ssh_alias)
+            .arg("echo OK"),
+        "verify passwordless ssh",
+    )
 }
 
 fn run_concurrency_sweep(workspace_root: &Path, args: Vec<String>) -> Result<()> {
     let mut remote_alias = env::var("REMOTE_ALIAS").unwrap_or_else(|_| "tefas-vm-ip".to_string());
-    let mut remote_repo = env::var("REMOTE_REPO").unwrap_or_else(|_| "/home/developer/Projects/github/TefasKapRequests".to_string());
+    let mut remote_repo = env::var("REMOTE_REPO")
+        .unwrap_or_else(|_| "/home/developer/Projects/github/TefasKapRequests".to_string());
     let mut profile_name = env::var("PROFILE_NAME").unwrap_or_else(|_| "profileDebug".to_string());
-    let mut runs: usize = env::var("RUNS").ok().and_then(|v| v.parse().ok()).unwrap_or(3);
+    let mut runs: usize = env::var("RUNS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(3);
     let mut levels_csv = env::var("LEVELS_CSV").unwrap_or_else(|_| "1,2,4,8".to_string());
-    let mut workloads_csv = env::var("WORKLOADS_CSV").unwrap_or_else(|_| "fundpage,query,fetch,parse".to_string());
-    let mut query_ops_csv = env::var("QUERY_OPS_CSV").unwrap_or_else(|_| "fonBilgiGetir,fonFiyatBilgiGetir,fonGetiriBazliBilgiGetir,fonBuyuklukBazliBilgiGetir".to_string());
+    let mut workloads_csv =
+        env::var("WORKLOADS_CSV").unwrap_or_else(|_| "fundpage,query,fetch,parse".to_string());
+    let mut query_ops_csv = env::var("QUERY_OPS_CSV").unwrap_or_else(|_| {
+        "fonBilgiGetir,fonFiyatBilgiGetir,fonGetiriBazliBilgiGetir,fonBuyuklukBazliBilgiGetir"
+            .to_string()
+    });
     let mut output: Option<PathBuf> = None;
 
     let mut i = 0usize;
     while i < args.len() {
         match args[i].as_str() {
-            "--host" => { remote_alias = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--host requires value"))?; i += 2; }
-            "--repo" => { remote_repo = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--repo requires value"))?; i += 2; }
-            "--cargo-profile" => { profile_name = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--cargo-profile requires value"))?; i += 2; }
-            "--runs" => { runs = args.get(i + 1).and_then(|v| v.parse().ok()).ok_or_else(|| anyhow::anyhow!("--runs requires int"))?; i += 2; }
-            "--levels" => { levels_csv = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--levels requires value"))?; i += 2; }
-            "--workloads" => { workloads_csv = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--workloads requires value"))?; i += 2; }
-            "--query-ops" => { query_ops_csv = args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--query-ops requires value"))?; i += 2; }
-            "--output" => { output = Some(PathBuf::from(args.get(i + 1).cloned().ok_or_else(|| anyhow::anyhow!("--output requires value"))?)); i += 2; }
+            "--host" => {
+                remote_alias = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--host requires value"))?;
+                i += 2;
+            }
+            "--repo" => {
+                remote_repo = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--repo requires value"))?;
+                i += 2;
+            }
+            "--cargo-profile" => {
+                profile_name = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--cargo-profile requires value"))?;
+                i += 2;
+            }
+            "--runs" => {
+                runs = args
+                    .get(i + 1)
+                    .and_then(|v| v.parse().ok())
+                    .ok_or_else(|| anyhow::anyhow!("--runs requires int"))?;
+                i += 2;
+            }
+            "--levels" => {
+                levels_csv = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--levels requires value"))?;
+                i += 2;
+            }
+            "--workloads" => {
+                workloads_csv = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--workloads requires value"))?;
+                i += 2;
+            }
+            "--query-ops" => {
+                query_ops_csv = args
+                    .get(i + 1)
+                    .cloned()
+                    .ok_or_else(|| anyhow::anyhow!("--query-ops requires value"))?;
+                i += 2;
+            }
+            "--output" => {
+                output = Some(PathBuf::from(
+                    args.get(i + 1)
+                        .cloned()
+                        .ok_or_else(|| anyhow::anyhow!("--output requires value"))?,
+                ));
+                i += 2;
+            }
             other => bail!("Unknown option: {other}"),
         }
     }
 
     let local_bin = resolve_local_profile_bin(workspace_root, &profile_name);
     if !local_bin.exists() {
-        run_checked(Command::new("cargo").arg("build").arg("--profile").arg(&profile_name).arg("-p").arg("tefas-cli").current_dir(workspace_root), "build local tefas-cli")?;
+        run_checked(
+            Command::new("cargo")
+                .arg("build")
+                .arg("--profile")
+                .arg(&profile_name)
+                .arg("-p")
+                .arg("tefas-cli")
+                .current_dir(workspace_root),
+            "build local tefas-cli",
+        )?;
     }
     let remote_bin = format!("{}/target/perf-bin/{}/tefas-cli", remote_repo, profile_name);
-    run_checked(Command::new("ssh").arg(&remote_alias).arg(format!("mkdir -p {}", sh_quote(&format!("{}/target/perf-bin/{}", remote_repo, profile_name)))), "prepare remote perf-bin dir")?;
-    run_checked(Command::new("rsync").arg("-az").arg(&local_bin).arg(format!("{}:{}", remote_alias, remote_bin)), "upload binary")?;
+    run_checked(
+        Command::new("ssh").arg(&remote_alias).arg(format!(
+            "mkdir -p {}",
+            sh_quote(&format!("{}/target/perf-bin/{}", remote_repo, profile_name))
+        )),
+        "prepare remote perf-bin dir",
+    )?;
+    run_checked(
+        Command::new("rsync")
+            .arg("-az")
+            .arg(&local_bin)
+            .arg(format!("{}:{}", remote_alias, remote_bin)),
+        "upload binary",
+    )?;
 
     let ts = timestamp_string();
-    let out_file = output.unwrap_or_else(|| workspace_root.join("target/perf-artifacts-remote/concurrency-sweep").join(format!("sweep_{ts}.tsv")));
-    if let Some(parent) = out_file.parent() { fs::create_dir_all(parent)?; }
-    fs::write(&out_file, "timestamp\tworkload\tconcurrency\trun\tseconds\n")?;
+    let out_file = output.unwrap_or_else(|| {
+        workspace_root
+            .join("target/perf-artifacts-remote/concurrency-sweep")
+            .join(format!("sweep_{ts}.tsv"))
+    });
+    if let Some(parent) = out_file.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    fs::write(
+        &out_file,
+        "timestamp\tworkload\tconcurrency\trun\tseconds\n",
+    )?;
 
     let remote_script = format!(
         "set -euo pipefail\ncd {repo}\nBIN={bin}\nRUNS={runs}\nLEVELS='{levels}'\nWORKLOADS='{workloads}'\nQUERY_OPS='{qops}'\nTS_REMOTE=$(date +%Y%m%d_%H%M%S)\ncontains_workload() {{ local name=\"$1\"; [[ \",$WORKLOADS,\" == *\",$name,\"* ]]; }}\nrun_timed() {{ local cmd=\"$1\"; {{ /usr/bin/time -f \"%e\" bash -lc \"$cmd\" >/dev/null; }} 2>&1; }}\nIFS=',' read -r -a LEVEL_ARR <<< \"$LEVELS\"\nIFS=',' read -r -a QUERY_OPS_ARR <<< \"$QUERY_OPS\"\nfor c in \"${{LEVEL_ARR[@]}}\"; do for ((i=1;i<=RUNS;i++)); do if contains_workload fundpage; then sec=$(run_timed \"$BIN --quiet --network-concurrency $c fundpage AC5 TLY TAR ZFB --output /tmp/fundpage_sweep.json\"); echo -e \"$TS_REMOTE\tfundpage\t$c\t$i\t$sec\"; fi; if contains_workload query; then query_cmd=\"$BIN --quiet --network-concurrency $c query\"; for op in \"${{QUERY_OPS_ARR[@]}}\"; do query_cmd+=\" $op\"; done; sec=$(run_timed \"$query_cmd > /tmp/query_sweep.json\"); echo -e \"$TS_REMOTE\tquery\t$c\t$i\t$sec\"; fi; if contains_workload fetch; then sec=$(run_timed \"$BIN --quiet --network-concurrency $c fetch https://www.tefas.gov.tr/tr/fon-detayli-analiz/AC5 https://www.tefas.gov.tr/tr/fon-detayli-analiz/TLY --output /tmp/fetch_sweep\"); echo -e \"$TS_REMOTE\tfetch\t$c\t$i\t$sec\"; fi; if contains_workload parse; then sec=$(run_timed \"$BIN --quiet --parse-concurrency $c parse datasets/fundpage/html/*.html --output /tmp/parse_sweep.json\"); echo -e \"$TS_REMOTE\tparse\t$c\t$i\t$sec\"; fi; done; done",
@@ -1046,7 +1307,12 @@ fn run_concurrency_sweep(workspace_root: &Path, args: Vec<String>) -> Result<()>
         qops = query_ops_csv,
     );
 
-    let output_remote = Command::new("ssh").arg(&remote_alias).arg("bash").arg("-lc").arg(remote_script).output()?;
+    let output_remote = Command::new("ssh")
+        .arg(&remote_alias)
+        .arg("bash")
+        .arg("-lc")
+        .arg(remote_script)
+        .output()?;
     if !output_remote.status.success() {
         bail!("remote concurrency sweep failed");
     }
@@ -1063,17 +1329,31 @@ fn run_concurrency_sweep(workspace_root: &Path, args: Vec<String>) -> Result<()>
     // Median summary in Rust
     let median_file = out_file.with_file_name(format!(
         "{}_median.tsv",
-        out_file.file_stem().and_then(|s| s.to_str()).unwrap_or("sweep")
+        out_file
+            .file_stem()
+            .and_then(|s| s.to_str())
+            .unwrap_or("sweep")
     ));
     let raw = fs::read_to_string(&out_file)?;
-    let mut groups: std::collections::BTreeMap<(String, u32), Vec<f64>> = std::collections::BTreeMap::new();
+    let mut groups: std::collections::BTreeMap<(String, u32), Vec<f64>> =
+        std::collections::BTreeMap::new();
     for (idx, line) in raw.lines().enumerate() {
-        if idx == 0 || line.trim().is_empty() { continue; }
+        if idx == 0 || line.trim().is_empty() {
+            continue;
+        }
         let cols: Vec<&str> = line.split('\t').collect();
-        if cols.len() < 5 { continue; }
+        if cols.len() < 5 {
+            continue;
+        }
         let workload = cols[1].to_string();
-        let conc: u32 = match cols[2].parse() { Ok(v) => v, Err(_) => continue };
-        let secs: f64 = match cols[4].parse() { Ok(v) => v, Err(_) => continue };
+        let conc: u32 = match cols[2].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
+        let secs: f64 = match cols[4].parse() {
+            Ok(v) => v,
+            Err(_) => continue,
+        };
         groups.entry((workload, conc)).or_default().push(secs);
     }
     let mut out = String::from("workload\tconcurrency\tmedian_seconds\n");
@@ -1101,7 +1381,10 @@ fn run_samply_summary(args: Vec<String>) -> Result<()> {
     while i < args.len() {
         match args[i].as_str() {
             "--top" => {
-                top = args.get(i + 1).and_then(|v| v.parse().ok()).ok_or_else(|| anyhow::anyhow!("--top requires integer"))?;
+                top = args
+                    .get(i + 1)
+                    .and_then(|v| v.parse().ok())
+                    .ok_or_else(|| anyhow::anyhow!("--top requires integer"))?;
                 i += 2;
             }
             other => bail!("Unknown argument: {other}"),
@@ -1117,28 +1400,64 @@ fn run_samply_summary(args: Vec<String>) -> Result<()> {
         json_text = fs::read_to_string(&path)?;
     }
     let v: serde_json::Value = serde_json::from_str(&json_text)?;
-    let threads = v.get("threads").and_then(|t| t.as_array()).ok_or_else(|| anyhow::anyhow!("invalid profile: missing threads"))?;
+    let threads = v
+        .get("threads")
+        .and_then(|t| t.as_array())
+        .ok_or_else(|| anyhow::anyhow!("invalid profile: missing threads"))?;
     let mut counts: std::collections::HashMap<String, f64> = std::collections::HashMap::new();
     for thread in threads {
-        let string_array: Vec<String> = thread.get("stringArray").and_then(|s| s.as_array()).map(|arr| arr.iter().map(|x| x.as_str().unwrap_or("<unknown>").to_string()).collect()).unwrap_or_default();
+        let string_array: Vec<String> = thread
+            .get("stringArray")
+            .and_then(|s| s.as_array())
+            .map(|arr| {
+                arr.iter()
+                    .map(|x| x.as_str().unwrap_or("<unknown>").to_string())
+                    .collect()
+            })
+            .unwrap_or_default();
         let frame_table = thread.get("frameTable").and_then(|x| x.as_object());
         let func_table = thread.get("funcTable").and_then(|x| x.as_object());
         let samples = thread.get("samples").and_then(|x| x.as_object());
         let Some(samples) = samples else { continue };
-        let stack_idx = samples.get("stack").and_then(|x| x.as_array()).cloned().unwrap_or_default();
-        let weights = samples.get("weight").and_then(|x| x.as_array()).cloned().unwrap_or_default();
+        let stack_idx = samples
+            .get("stack")
+            .and_then(|x| x.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let weights = samples
+            .get("weight")
+            .and_then(|x| x.as_array())
+            .cloned()
+            .unwrap_or_default();
         let stack_table = thread.get("stackTable").and_then(|x| x.as_object());
-        let Some(stack_table) = stack_table else { continue };
-        let frame_col = stack_table.get("frame").and_then(|x| x.as_array()).cloned().unwrap_or_default();
-        let func_col = frame_table.and_then(|ft| ft.get("func")).and_then(|x| x.as_array()).cloned().unwrap_or_default();
-        let func_names = func_table.and_then(|ft| ft.get("name")).and_then(|x| x.as_array()).cloned().unwrap_or_default();
+        let Some(stack_table) = stack_table else {
+            continue;
+        };
+        let frame_col = stack_table
+            .get("frame")
+            .and_then(|x| x.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let func_col = frame_table
+            .and_then(|ft| ft.get("func"))
+            .and_then(|x| x.as_array())
+            .cloned()
+            .unwrap_or_default();
+        let func_names = func_table
+            .and_then(|ft| ft.get("name"))
+            .and_then(|x| x.as_array())
+            .cloned()
+            .unwrap_or_default();
         for (idx, si) in stack_idx.iter().enumerate() {
             let Some(si) = si.as_u64() else { continue };
             let si = si as usize;
             let fi = frame_col.get(si).and_then(|x| x.as_u64()).unwrap_or(0) as usize;
             let fu = func_col.get(fi).and_then(|x| x.as_u64()).unwrap_or(0) as usize;
             let name_idx = func_names.get(fu).and_then(|x| x.as_u64()).unwrap_or(0) as usize;
-            let sym = string_array.get(name_idx).cloned().unwrap_or_else(|| "<unknown>".to_string());
+            let sym = string_array
+                .get(name_idx)
+                .cloned()
+                .unwrap_or_else(|| "<unknown>".to_string());
             let w = weights.get(idx).and_then(|x| x.as_f64()).unwrap_or(1.0);
             *counts.entry(sym).or_insert(0.0) += w;
         }
@@ -1148,7 +1467,11 @@ fn run_samply_summary(args: Vec<String>) -> Result<()> {
     items.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
     println!("Top {} hotspots (total weight: {:.0})", top, total);
     for (i, (sym, cnt)) in items.into_iter().take(top).enumerate() {
-        let pct = if total > 0.0 { cnt * 100.0 / total } else { 0.0 };
+        let pct = if total > 0.0 {
+            cnt * 100.0 / total
+        } else {
+            0.0
+        };
         println!("{:>3}. {:>10.0} {:>5.1}% {}", i + 1, cnt, pct, sym);
     }
     Ok(())

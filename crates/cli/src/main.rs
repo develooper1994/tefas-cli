@@ -8,11 +8,11 @@ use std::path::Path;
 use std::process::Command;
 use std::sync::Arc;
 use tefas::{
-    build_fetch_batch_plan, build_fundpage_batch_plan, build_query_batch_plan,
-    convert_getlogo_to_images, parse_document, run_fetch_batch, run_fundpage_batch,
-    run_query_batch, AppConfig, AuthConfig, FetchBatchRequest, FundpageBatchRequest, FundpageJob,
-    HttpBackend, NetworkClient, Operation, OperationOld, QueryBatchRequest, QueryJob,
-    QueryOperationName, RetryConfig, TlsBackend, TlsConfig, DEFAULT_USER_AGENT,
+    AppConfig, AuthConfig, DEFAULT_USER_AGENT, FetchBatchRequest, FundpageBatchRequest,
+    FundpageJob, HttpBackend, NetworkClient, Operation, OperationOld, QueryBatchRequest, QueryJob,
+    QueryOperationName, RetryConfig, TlsBackend, TlsConfig, build_fetch_batch_plan,
+    build_fundpage_batch_plan, build_query_batch_plan, convert_getlogo_to_images, parse_document,
+    run_fetch_batch, run_fundpage_batch, run_query_batch,
 };
 use tokio::sync::Semaphore;
 
@@ -452,8 +452,8 @@ fn write_or_stdout(path: Option<&str>, content: &str) -> anyhow::Result<()> {
 
 mod routing;
 use routing::{
-    find_operation, resolve_fetch_outputs, resolve_fundpage_outputs, resolve_parse_input_path,
-    resolve_save_html_paths, AnyOperation, FetchOutputPlan, FundpageOutputPlan,
+    AnyOperation, FetchOutputPlan, FundpageOutputPlan, find_operation, resolve_fetch_outputs,
+    resolve_fundpage_outputs, resolve_parse_input_path, resolve_save_html_paths,
 };
 
 // ── Main Entry ───────────────────────────────────────────────────────────────
@@ -515,7 +515,11 @@ async fn main() -> anyhow::Result<()> {
 
             match out_plan {
                 FundpageOutputPlan::Stdout => {
-                    let val = ordered.into_iter().next().map(|(_, v)| v).unwrap_or(Value::Null);
+                    let val = ordered
+                        .into_iter()
+                        .next()
+                        .map(|(_, v)| v)
+                        .unwrap_or(Value::Null);
                     println!("{}", json_to_text(cfg.pretty, &val)?);
                 }
                 FundpageOutputPlan::MergedFile(path) => {
@@ -565,7 +569,9 @@ async fn main() -> anyhow::Result<()> {
 
             // Require at least one operation, --list, or --info
             if operation.is_empty() && old.is_empty() && !list && info.is_none() {
-                anyhow::bail!("the following required arguments were not provided:\n  <OPERATION>...\n\nUsage: tefas-cli query [OPERATION]...\n\nFor more information, try '--help'.");
+                anyhow::bail!(
+                    "the following required arguments were not provided:\n  <OPERATION>...\n\nUsage: tefas-cli query [OPERATION]...\n\nFor more information, try '--help'."
+                );
             }
 
             if list {
@@ -737,7 +743,8 @@ async fn main() -> anyhow::Result<()> {
 
             // Build jobs with deduplication: same operation names are not queried multiple times
             let mut jobs: Vec<QueryJob> = Vec::with_capacity(operation.len() + old.len());
-            let mut seen_names: std::collections::HashSet<String> = std::collections::HashSet::new();
+            let mut seen_names: std::collections::HashSet<String> =
+                std::collections::HashSet::new();
             let mut job_idx = 0;
 
             for op in operation.into_iter() {
@@ -756,7 +763,9 @@ async fn main() -> anyhow::Result<()> {
                     name,
                     url,
                     referer: spec.referer,
-                    default_payload: op.default_payload_typed().unwrap_or_else(|| op.default_payload()),
+                    default_payload: op
+                        .default_payload_typed()
+                        .unwrap_or_else(|| op.default_payload()),
                 });
                 job_idx += 1;
             }
@@ -776,9 +785,14 @@ async fn main() -> anyhow::Result<()> {
                 job_idx += 1;
             }
 
-            let ordered_results =
-                run_query_batch(&client, jobs, query_plan.concurrency, set_overrides, custom_payload)
-                    .await?;
+            let ordered_results = run_query_batch(
+                &client,
+                jobs,
+                query_plan.concurrency,
+                set_overrides,
+                custom_payload,
+            )
+            .await?;
 
             let mut merged = serde_json::Map::new();
             for (_, name, res) in ordered_results {
@@ -831,7 +845,10 @@ async fn main() -> anyhow::Result<()> {
             match out_plan {
                 FetchOutputPlan::DefaultSingle => {
                     let (url, body) = fetch_results.into_iter().next().unwrap_or_else(|| {
-                        ("(none)".to_string(), Err(anyhow::anyhow!("no URLs provided")))
+                        (
+                            "(none)".to_string(),
+                            Err(anyhow::anyhow!("no URLs provided")),
+                        )
                     });
                     match body {
                         Ok(text) => {
@@ -848,8 +865,7 @@ async fn main() -> anyhow::Result<()> {
                     }
                 }
                 FetchOutputPlan::PerUrl(plan) => {
-                    for ((url, body), (_, dest)) in
-                        fetch_results.into_iter().zip(plan.into_iter())
+                    for ((url, body), (_, dest)) in fetch_results.into_iter().zip(plan.into_iter())
                     {
                         match body {
                             Ok(text) => {

@@ -1,8 +1,8 @@
 use clap::ValueEnum;
 use std::ffi::{CStr, CString};
 use std::os::raw::c_char;
-use tefas::{AppConfig, Operation};
 use tefas::runtime::BlockingClient;
+use tefas::{AppConfig, Operation};
 
 fn c_ptr_to_str(ptr: *const c_char) -> anyhow::Result<String> {
     if ptr.is_null() {
@@ -37,7 +37,11 @@ pub extern "C" fn tefas_version() -> *mut c_char {
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn tefas_free_string(ptr: *mut c_char) {
+/// # Safety
+///
+/// `ptr` must be a pointer previously returned by this library via
+/// `CString::into_raw` and must not have been freed already.
+pub unsafe extern "C" fn tefas_free_string(ptr: *mut c_char) {
     if ptr.is_null() {
         return;
     }

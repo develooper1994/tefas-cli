@@ -1,9 +1,7 @@
 //! TEFAS media adapter layer built on shared image utilities.
 
+use image_util::{ImageRecord, convert_base64_records_to_images};
 use serde_json::Value;
-use image_util::{
-    ImageRecord, convert_base64_records_to_images,
-};
 
 pub use image_util::{ImageConvertStats, ImageOutputFormat};
 
@@ -82,7 +80,8 @@ pub fn convert_getlogo_to_images(
         });
     }
 
-    let mut stats = convert_base64_records_to_images(&generic_records, outdir, format, quality, verbose)?;
+    let mut stats =
+        convert_base64_records_to_images(&generic_records, outdir, format, quality, verbose)?;
     stats.skipped += skipped;
 
     Ok(stats)

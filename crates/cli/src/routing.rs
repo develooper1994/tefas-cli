@@ -55,7 +55,10 @@ fn bundled_fixture_candidates(file_name: &Path) -> Vec<PathBuf> {
         );
         dedup_push(
             &mut candidates,
-            root.join("datasets").join("fundpage").join("html").join(file_name),
+            root.join("datasets")
+                .join("fundpage")
+                .join("html")
+                .join(file_name),
         );
     }
 

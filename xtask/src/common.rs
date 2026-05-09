@@ -50,7 +50,10 @@ pub fn resolve_local_profile_bin(workspace_root: &Path, profile_name: &str) -> P
             }
         }
         "profileRelease" => {
-            let alt = workspace_root.join("target").join("release").join("tefas-cli");
+            let alt = workspace_root
+                .join("target")
+                .join("release")
+                .join("tefas-cli");
             if alt.exists() {
                 return alt;
             }
