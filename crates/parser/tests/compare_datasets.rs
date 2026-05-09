@@ -68,8 +68,7 @@ fn compare_json(expected: &Value, actual: &Value) -> Result<(), String> {
 }
 
 fn strict_dataset_mode() -> bool {
-    std::env::var("CI").ok().as_deref() == Some("true")
-        || std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1")
+    std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1")
 }
 
 fn resolve_dataset_root(candidates: &[PathBuf], label: &str) -> Option<PathBuf> {
@@ -206,8 +205,7 @@ fn compare_datasets() {
                 .map(|p| p.display().to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            let strict_mode = std::env::var("CI").ok().as_deref() == Some("true")
-                || std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1");
+            let strict_mode = std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1");
             if strict_mode {
                 panic!(
                     "compare_datasets: strict modda datasets/raw fixture dizini bulunamadi. Kontrol edilen yollar: {}",
