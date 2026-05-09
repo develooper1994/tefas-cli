@@ -1,6 +1,8 @@
+pub mod client;
 pub mod executors;
 pub mod runtime;
 
+pub use client::TefasClient;
 pub use executors::{
     apply_set_overrides, run_fetch_batch, run_fundpage_batch, run_query_batch, FundpageJob,
     QueryJob,
