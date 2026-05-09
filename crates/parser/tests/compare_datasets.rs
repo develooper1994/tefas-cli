@@ -205,7 +205,8 @@ fn compare_datasets() {
                 .map(|p| p.display().to_string())
                 .collect::<Vec<_>>()
                 .join(", ");
-            let strict_mode = std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1");
+            let strict_mode =
+                std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1");
             if strict_mode {
                 panic!(
                     "compare_datasets: strict modda datasets/raw fixture dizini bulunamadi. Kontrol edilen yollar: {}",
