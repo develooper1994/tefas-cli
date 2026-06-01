@@ -31,6 +31,8 @@ pub(crate) fn looks_like_waf_challenge(text: &str) -> bool {
     text.contains("window[\"failureConfig\"]")
         || text.contains("/TSPD/")
         || text.contains("Your support ID is:")
+    || text.contains("Request Rejected")
+    || text.contains("request rejected")
         || text.contains("Please enable JavaScript to view the page content")
 }
 

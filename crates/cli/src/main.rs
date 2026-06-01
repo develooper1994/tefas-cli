@@ -87,6 +87,7 @@ struct Cli {
 #[derive(Subcommand, Debug, Clone)]
 enum Commands {
     /// Shortcut to fetch and parse fund pages by their codes (e.g. tefas fundpage AC5 TLY)
+    #[command(alias = "fp")]
     Fundpage {
         /// Fund codes (e.g. AC5, TLY). Uppercase applied automatically.
         #[arg(required = true, num_args = 1..)]
@@ -112,6 +113,7 @@ enum Commands {
     },
 
     /// Run Takasbank/TEFAS JSON API operations
+    #[command(alias = "q")]
     Query {
         /// Operation name (e.g. fonBilgiGetir).
         #[arg(value_enum)]
@@ -143,6 +145,7 @@ enum Commands {
     },
 
     /// Fetch raw HTML from one or more URLs with WAF bypass defaults
+    #[command(alias = "f")]
     Fetch {
         /// URLs to fetch (1 or more)
         #[arg(required = true, num_args = 1..)]
@@ -161,6 +164,7 @@ enum Commands {
     },
 
     /// Parse a local HTML fund page into JSON
+    #[command(alias = "p")]
     Parse {
         /// Input HTML file paths
         #[arg(required = true, num_args = 1..)]
@@ -177,6 +181,7 @@ enum Commands {
     },
 
     /// Download and convert fund logos to images
+    #[command(alias = "l")]
     Logo {
         /// Fund/Member codes to fetch logos for
         codes: Vec<String>,
@@ -243,11 +248,11 @@ struct GlobalArgs {
 
     /// Maximum number of concurrent network tasks for fundpage/fetch/query.
     /// Lower values reduce WAF pressure on network-heavy commands.
-    #[arg(long, env = "TEFAS_NETWORK_CONCURRENCY", global = true)]
+    #[arg(short = 'n', long, env = "TEFAS_NETWORK_CONCURRENCY", global = true)]
     network_concurrency: Option<usize>,
 
     /// Maximum number of concurrent local parse tasks.
-    #[arg(long, env = "TEFAS_PARSE_CONCURRENCY", global = true)]
+    #[arg(short = 'P', long, env = "TEFAS_PARSE_CONCURRENCY", global = true)]
     parse_concurrency: Option<usize>,
 
     /// Legacy fallback concurrency knob. Used only if the more specific flags
@@ -358,6 +363,9 @@ fn default_request_concurrency(backend: HttpBackend) -> usize {
     }
 }
 
+const MAX_NETWORK_CONCURRENCY: usize = 64;
+const MAX_PARSE_CONCURRENCY: usize = 32;
+
 fn default_parse_concurrency() -> usize {
     std::thread::available_parallelism()
         .map(|n| n.get())
@@ -369,11 +377,24 @@ fn effective_concurrency(requested: Option<usize>, default_limit: usize) -> usiz
     requested.unwrap_or(default_limit).max(1)
 }
 
+fn clamp_concurrency(limit: usize, max_limit: usize) -> usize {
+    limit.min(max_limit)
+}
+
+fn effective_network_concurrency(global: &GlobalArgs, default_limit: usize) -> usize {
+    let raw = effective_concurrency(
+        global.network_concurrency.or(global.concurrency),
+        default_limit,
+    );
+    clamp_concurrency(raw, MAX_NETWORK_CONCURRENCY)
+}
+
 fn effective_parse_concurrency(global: &GlobalArgs) -> usize {
-    effective_concurrency(
+    let raw = effective_concurrency(
         global.parse_concurrency.or(global.concurrency),
         default_parse_concurrency(),
-    )
+    );
+    clamp_concurrency(raw, MAX_PARSE_CONCURRENCY)
 }
 
 fn parse_set_pair(input: &str) -> anyhow::Result<(String, Value)> {
@@ -469,15 +490,20 @@ async fn main() -> anyhow::Result<()> {
             save_html,
             fields,
         } => {
+            let cfg = build_app_config(&cli.global, true);
+            let network_concurrency = effective_network_concurrency(
+                &cli.global,
+                default_request_concurrency(cfg.backend),
+            );
             let fundpage_plan = build_fundpage_batch_plan(FundpageBatchRequest::new(
                 codes.clone(),
-                cli.global.network_concurrency.or(cli.global.concurrency),
+                Some(network_concurrency),
             ));
+            let parse_concurrency = effective_parse_concurrency(&cli.global);
 
             let out_plan = resolve_fundpage_outputs(&codes, output)?;
             let html_paths = resolve_save_html_paths(&codes, save_html)?;
 
-            let cfg = build_app_config(&cli.global, true);
             let client = get_client(&cfg).await?;
 
             let jobs: Vec<FundpageJob> = codes
@@ -494,6 +520,7 @@ async fn main() -> anyhow::Result<()> {
                 &cfg.normalized_base_url(),
                 jobs,
                 fundpage_plan.concurrency,
+                parse_concurrency,
                 cli.global.quiet,
             )
             .await;
@@ -561,6 +588,8 @@ async fn main() -> anyhow::Result<()> {
             format,
         } => {
             let cfg = build_app_config(&cli.global, false);
+            let network_concurrency =
+                effective_network_concurrency(&cli.global, default_request_concurrency(cfg.backend));
 
             // --list and --info are discovery-only; reject mixing with operation args
             if (list || info.is_some()) && (!operation.is_empty() || !old.is_empty()) {
@@ -729,7 +758,7 @@ async fn main() -> anyhow::Result<()> {
             );
             let query_plan = build_query_batch_plan(QueryBatchRequest::new(
                 operation_names,
-                cli.global.network_concurrency.or(cli.global.concurrency),
+                Some(network_concurrency),
             ));
             let set_overrides: Vec<(String, Value)> = set
                 .iter()
@@ -803,14 +832,20 @@ async fn main() -> anyhow::Result<()> {
             if format == OutputFormat::Humanize
                 && final_val.as_object().map(|m| m.len()).unwrap_or(0) == 1
             {
-                let raw = final_val.as_object().unwrap().values().next().unwrap();
-                let normalized = tefas::normalize_fund_summary_list(raw);
-                if normalized.is_empty() {
-                    println!("{}", json_to_text(cfg.pretty, &final_val)?);
-                } else {
-                    for item in normalized {
-                        println!("{}", item.human_line());
+                if let Some(raw) = final_val
+                    .as_object()
+                    .and_then(|map| map.values().next())
+                {
+                    let normalized = tefas::normalize_fund_summary_list(raw);
+                    if normalized.is_empty() {
+                        println!("{}", json_to_text(cfg.pretty, &final_val)?);
+                    } else {
+                        for item in normalized {
+                            println!("{}", item.human_line());
+                        }
                     }
+                } else {
+                    println!("{}", json_to_text(cfg.pretty, &final_val)?);
                 }
             } else {
                 println!("{}", json_to_text(cfg.pretty, &final_val)?);
@@ -830,11 +865,13 @@ async fn main() -> anyhow::Result<()> {
             }
             let mut cfg = build_app_config(&global_mod, true);
             cfg.auth.skip_preflight = skip_preflight;
+            let network_concurrency =
+                effective_network_concurrency(&cli.global, default_request_concurrency(cfg.backend));
 
             let client = get_client(&cfg).await?;
             let fetch_plan = build_fetch_batch_plan(FetchBatchRequest::new(
                 urls.clone(),
-                cli.global.network_concurrency.or(cli.global.concurrency),
+                Some(network_concurrency),
                 default_request_concurrency(cfg.backend),
             ));
 

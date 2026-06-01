@@ -346,6 +346,12 @@ fn request_profile_navigation_vs_api_fields() {
     );
 }
 
+#[test]
+fn looks_like_waf_challenge_detects_request_rejected_signature() {
+    let text = "<html><body>Request Rejected. Your support ID is: 12345</body></html>";
+    assert!(NetworkClient::looks_like_waf_challenge(text));
+}
+
 // ── WAF bypass validation (#20) ─────────────────────────────────────────
 
 /// The `proxy` field round-trips through `AppConfig`.

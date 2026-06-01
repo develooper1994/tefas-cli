@@ -124,6 +124,87 @@ latest="$(find target/perf-artifacts-remote -mindepth 1 -maxdepth 1 -type d | so
 cargo xtask tefas samply-summary "$latest/profile.json.gz" --top 20
 ```
 
+## Concurrency Matrix (Yerel, Hizli Kontrol)
+
+Fundpage parser tarafinda concurrency etkisini hizli gormek icin yerel fixture setiyle asagidaki matrix calistirilabilir.
+
+```bash
+set -euo pipefail
+files=$(find datasets/fundpage/html -maxdepth 1 -type f -name '*.html' | sort)
+
+measure() {
+  c="$1"
+  vals=""
+  for i in 1 2 3; do
+    t=$(/usr/bin/time -f "%e" \
+      cargo run -q -p cli -- --parse-concurrency "$c" parse $files --output "/tmp/tefas-parse-$c-$i.json" \
+      2>&1 >/dev/null | tail -n 1)
+    vals+="$t\n"
+  done
+  printf "%b" "$vals" | sed '/^$/d' | sort -n | awk 'NR==2{print $1}'
+}
+
+echo "concurrency,median_seconds"
+for c in 1 2 4 8; do
+  echo "$c,$(measure "$c")"
+done
+```
+
+Yorumlama:
+
+- Ilk kosu derleme maliyeti icerebilir; bu nedenle 3 tekrar + medyan kullan.
+- 1 -> 2 artisinda net kazanc beklenir.
+- 4 ve 8 seviyelerinde kazanc ortam ve CPU cekirdek sayisina gore degisken olabilir.
+- Bu matrix parser CPU olcegini gosterir; fundpage fetch + parse birlesik etkisi icin remote bench ile birlikte degerlendirilmelidir.
+
+## End-to-End Fundpage Matrix (Network x Parse)
+
+Fundpage akisinda network ve parse concurrency etkisini birlikte gormek icin kucuk bir grid olcumu:
+
+```bash
+cargo xtask tefas fundpage-matrix \
+  --network 2,4 \
+  --parse 2,8 \
+  --runs 3 \
+  --warmup 1 \
+  --codes AC5,TLY,AFT \
+  --output /tmp/tefas-fundpage-matrix.csv
+```
+
+Bu komut medyan sureleri hesaplayip `network,parse,median_seconds` formatinda CSV uretir.
+
+Manuel olcum alternatifi:
+
+```bash
+set -euo pipefail
+
+measure() {
+  net="$1"
+  parse="$2"
+  /usr/bin/time -f "%e" \
+    cargo run -q -p cli -- \
+      --network-concurrency "$net" \
+      --parse-concurrency "$parse" \
+      fundpage AC5 TLY AFT \
+      --output "/tmp/tefas-fundpage-n${net}-p${parse}.json" \
+    2>&1 >/dev/null | tail -n 1
+}
+
+echo "network,parse,seconds"
+for net in 2 4; do
+  for parse in 2 8; do
+    echo "$net,$parse,$(measure "$net" "$parse")"
+  done
+done
+```
+
+Yorumlama:
+
+- `network` artisina karsin iyilesme varsa darbogazin bir kismi I/O tarafindadir.
+- `parse` artisina karsin iyilesme varsa CPU parse tarafinda kazanilacak alan vardir.
+- En iyi kombinasyon ortama gore degisir; tek bir sabit deger yerine kucuk grid ile secim yap.
+- Dis ag veya WAF degiskenligi nedeniyle sonuclari en az 3 tekrar + medyan ile degerlendirmek daha guvenlidir.
+
 ## Hotspot Analizi
 
 `profile.json.gz` için öncelik sırası:

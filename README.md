@@ -9,36 +9,74 @@ Sonuçlar JSON veya okunabilir text olarak çıktılanır.
 
 ## Hızlı Başlangıç
 
+`xtask` geliştirme otomasyonu içindir. Normal kullanımda doğrudan CLI çalıştırın.
+
+```bash
+# Günlük kullanım (xtask yok)
+cargo run -q -p cli -- fundpage AC5 TLY AFT --network-concurrency 1 --parse-concurrency 8 --output result.json --save-html ./html-out
+
+# Release binary ile kullanım
+cargo build --release -p cli
+./target/release/cli fundpage AC5 TLY AFT --network-concurrency 1 --parse-concurrency 8 --output result.json --save-html ./html-out
+
+# Çıktı doğrulama: WAF rejection yakala
+grep -R "Request Rejected" ./html-out/*.html
+```
+
 ```bash
 # Fon sayfalarını paralel çek ve parse et
-cargo run -q -p tefas-cli -- fundpage AC5 TLY AFT
+cargo run -q -p cli -- fundpage AC5 TLY AFT
 
 # Ham HTML'leri bir klasöre yedekle
-cargo run -q -p tefas-cli -- fundpage AC5 TLY --save-html ./backups
+cargo run -q -p cli -- fundpage AC5 TLY --save-html ./backups
 
 # Takasbank API operasyonlarını listele
-cargo run -q -p tefas-cli -- query --list
+cargo run -q -p cli -- query --list
 
 # Belirli bir operasyonun giriş alanlarını gör
-cargo run -q -p tefas-cli -- query --info fonBilgiGetir
+cargo run -q -p cli -- query --info fonBilgiGetir
 
 # Birden fazla operasyon (sonuçlar tek JSON'da birleşir)
-cargo run -q -p tefas-cli -- query fonBilgiGetir getBanners
+cargo run -q -p cli -- query fonBilgiGetir getBanners
 
 # Payload alanı override
-cargo run -q -p tefas-cli -- query fonBilgiGetir --set fonKodu=AC5
+cargo run -q -p cli -- query fonBilgiGetir --set fonKodu=AC5
+
+# Endpoint çağrılarında paralellik (bounded async)
+cargo run -q -p cli -- query fonBilgiGetir getBanners fonGetiriBazliBilgiGetir --network-concurrency 8
 
 # Birden fazla URL'yi paralel çek
-cargo run -q -p tefas-cli -- fetch https://www.tefas.gov.tr https://www.takasbank.com.tr --output ./html_dump
+cargo run -q -p cli -- fetch https://www.tefas.gov.tr https://www.takasbank.com.tr --output ./html_dump
+
+# Fetch hattında paralellik (bounded async)
+cargo run -q -p cli -- fetch https://www.tefas.gov.tr https://www.takasbank.com.tr https://www.takasbank.com.tr/tr/veri --network-concurrency 8 --output ./html_dump
 
 # Yerel HTML dosyalarını parse et
-cargo run -q -p tefas-cli -- parse tefas_fetched.html other_fund.html
+cargo run -q -p cli -- parse tefas_fetched.html other_fund.html
 
 # Logo PNG olarak kaydet
-cargo run -q -p tefas-cli -- logo AC5 TLY --format png
+cargo run -q -p cli -- logo AC5 TLY --format png
 ```
 
 Daha fazla örnek: [docs/operations/quickstart.md](docs/operations/quickstart.md)
+
+### Baska Rust Projesinden Kutuphane Olarak Kullanma
+
+Bu repo icindeki kutuphane crate adi `tefas` olarak kullanilir (`package = "lib"`).
+
+```toml
+[dependencies]
+tefas = { git = "https://github.com/<org>/<repo>.git", package = "lib" }
+```
+
+Path dependency:
+
+```toml
+[dependencies]
+tefas = { path = "../tefas-cli/crates/lib", package = "lib" }
+```
+
+Kutuphane kullanim ornekleri: [crates/lib/README.md](crates/lib/README.md)
 
 ---
 
@@ -86,7 +124,7 @@ shared workspace:
 | [docs/operations/reference.md](docs/operations/reference.md) | Tüm flag ve davranış referansı |
 | [docs/operations/low_level_http.md](docs/operations/low_level_http.md) | Low-level HTTP araştırması |
 | [docs/api/INPUT_OUTPUT_FIELDS.md](docs/api/INPUT_OUTPUT_FIELDS.md) | API alan referansı |
-| [shared/README.md](shared/README.md) | Ortak crate'ler (http-config/http-client/image-util) |
+| [crates/http-client/README.md](crates/http-client/README.md), [crates/http-config/README.md](crates/http-config/README.md), [crates/image-util/README.md](crates/image-util/README.md) | Ortak crate'ler (http-config/http-client/image-util) |
 | [crates/http-client/README.md](crates/http-client/README.md) | Taşınan ağ/TLS backend katmanı |
 | [crates/http-config/README.md](crates/http-config/README.md) | Taşınan HTTP config katmanı |
 
@@ -120,7 +158,7 @@ cargo check --workspace   # default features
 Hyper + NativeTLS profili sistem TLS kütüphanelerini gerektirir:
 
 ```bash
-cargo run -q -p tefas-cli --features native-tls -- \
+cargo run -q -p cli --features native-tls -- \
   --backend hyper --tls nativetls query fonBilgiGetir
 ```
 
@@ -132,14 +170,14 @@ cargo run -q -p tefas-cli --features native-tls -- \
 Farklı OS/cihaz tarayıcısı kimliklerini taklit etmek için persona preset'leri:
 
 ```bash
-cargo run -q -p tefas-cli -- \
+cargo run -q -p cli -- \
   --backend impcurl --persona ios query fonBilgiGetir
 ```
 
 Manuel hedef:
 
 ```bash
-cargo run -q -p tefas-cli -- \
+cargo run -q -p cli -- \
   --backend impcurl --impersonate chrome136 query fonBilgiGetir
 ```
 
@@ -153,6 +191,9 @@ Smoke fuzz (ağ gerektirmez):
 
 ```bash
 cargo xtask tefas fuzz --dry-run
+
+# Yuksek eszamanli fundpage + parse smoke (ag + parse birlikte)
+cargo xtask tefas load-smoke --fund-count 30 --network 24 --parse 16 --runs 1 --warmup 0
 ```
 
 ---
@@ -160,15 +201,15 @@ cargo xtask tefas fuzz --dry-run
 ## Yardım
 
 ```bash
-cargo run -q -p tefas-cli -- --help
-cargo run -q -p tefas-cli -- fundpage --help
-cargo run -q -p tefas-cli -- query --help
-cargo run -q -p tefas-cli -- fetch --help
-cargo run -q -p tefas-cli -- parse --help
-cargo run -q -p tefas-cli -- logo --help
+cargo run -q -p cli -- --help
+cargo run -q -p cli -- fundpage --help
+cargo run -q -p cli -- query --help
+cargo run -q -p cli -- fetch --help
+cargo run -q -p cli -- parse --help
+cargo run -q -p cli -- logo --help
 ```
 
-TODO ve handoff notlari: [TODO.md](TODO.md)
+Profiling ve handoff notlari: [docs/operations/profiling.md](docs/operations/profiling.md)
 
 
 ## TODO
@@ -177,7 +218,7 @@ TODO ve handoff notlari: [TODO.md](TODO.md)
 - Parity ve parser testleri: yesil
 
 ### Sonraki Isler (Perf-Only)
-- [ ] Her degisiklikte zorunlu gate: `cargo test -p tefas-parser` + `compare_datasets`.
+- [x] Her degisiklikte zorunlu gate: `cargo test -p tefas-parser` + `compare_datasets`.
 
 ### Handoff Komutlari
 

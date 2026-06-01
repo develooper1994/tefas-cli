@@ -19,6 +19,20 @@ env:
   CI: "true"
 
 jobs:
+  docs-consistency:
+    name: Docs consistency
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail on stale CLI package commands in docs
+        run: |
+          if rg -n "cargo run -q -p tefas-cli --" README.md docs; then
+            echo "Found stale docs commands. Use '-p cli' for normal CLI usage."
+            exit 1
+          fi
+
   fmt:
     name: Rust fmt
     runs-on: ubuntu-latest
@@ -74,7 +88,14 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
 
+      - name: Parser parity gate
+        env:
+          TEFAS_STRICT_DATASET_PARITY: "1"
+        run: cargo test -p parser --test compare_datasets --locked
+
       - name: Run tests
+        env:
+          TEFAS_STRICT_DATASET_PARITY: "1"
         run: cargo test --workspace --locked
 
   shellcheck:

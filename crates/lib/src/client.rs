@@ -21,12 +21,40 @@ pub struct TefasClient {
     client: NetworkClient,
 }
 
+#[derive(Clone, Debug, Default)]
+pub struct FundpageRunOptions {
+    pub network_concurrency: Option<usize>,
+    pub parse_concurrency: Option<usize>,
+    pub quiet: bool,
+}
+
 enum AnyOperation {
     New(Operation),
     Old(OperationOld),
 }
 
+fn default_parse_concurrency() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| n.get())
+        .unwrap_or(4)
+        .clamp(1, 16)
+}
+
 impl TefasClient {
+    /// Create a client using default AppConfig values.
+    pub fn from_defaults() -> anyhow::Result<Self> {
+        Self::new(AppConfig::default())
+    }
+
+    /// Create a client from defaults while overriding only the base URL.
+    pub fn from_base_url(base_url: impl Into<String>) -> anyhow::Result<Self> {
+        let cfg = AppConfig {
+            base_url: base_url.into(),
+            ..AppConfig::default()
+        };
+        Self::new(cfg)
+    }
+
     /// Create a high-level TEFAS client from application config.
     pub fn new(cfg: AppConfig) -> anyhow::Result<Self> {
         let client = NetworkClient::new(&cfg)?;
@@ -77,7 +105,91 @@ impl TefasClient {
             .collect::<Vec<_>>();
 
         let plan = build_fundpage_batch_plan(request);
-        run_fundpage_batch(&self.client, &self.base_url, jobs, plan.concurrency, quiet).await
+        run_fundpage_batch(
+            &self.client,
+            &self.base_url,
+            jobs,
+            plan.concurrency,
+            default_parse_concurrency(),
+            quiet,
+        )
+        .await
+    }
+
+    /// High-level convenience method for collecting multiple fund pages with
+    /// optional network/parse concurrency overrides.
+    pub async fn collect_fundpages(
+        &self,
+        codes: Vec<String>,
+        options: FundpageRunOptions,
+    ) -> Vec<(String, anyhow::Result<Value>)> {
+        let jobs = codes
+            .iter()
+            .map(|code| FundpageJob {
+                code: code.to_uppercase(),
+                html_save_dest: None,
+            })
+            .collect::<Vec<_>>();
+
+        let plan = build_fundpage_batch_plan(FundpageBatchRequest::new(
+            codes,
+            options.network_concurrency,
+        ));
+
+        run_fundpage_batch(
+            &self.client,
+            &self.base_url,
+            jobs,
+            plan.concurrency,
+            options
+                .parse_concurrency
+                .unwrap_or_else(default_parse_concurrency),
+            options.quiet,
+        )
+        .await
+    }
+
+    /// Convenience API for single-operation query calls.
+    pub async fn query_one(
+        &self,
+        operation: Operation,
+        set_overrides: Vec<(String, Value)>,
+        custom_payload: Option<Value>,
+    ) -> anyhow::Result<Value> {
+        self.query(vec![operation], vec![], None, set_overrides, custom_payload)
+            .await
+    }
+
+    /// Convenience API for single legacy-operation query calls.
+    pub async fn query_legacy_one(
+        &self,
+        operation: OperationOld,
+        set_overrides: Vec<(String, Value)>,
+        custom_payload: Option<Value>,
+    ) -> anyhow::Result<Value> {
+        self.query(vec![], vec![operation], None, set_overrides, custom_payload)
+            .await
+    }
+
+    /// Dynamic convenience API that resolves operation names (new + legacy)
+    /// and executes a single merged query batch.
+    pub async fn query_names(
+        &self,
+        names: Vec<String>,
+        requested_concurrency: Option<usize>,
+        set_overrides: Vec<(String, Value)>,
+        custom_payload: Option<Value>,
+    ) -> anyhow::Result<Value> {
+        let operation_names = names
+            .into_iter()
+            .map(QueryOperationName::new)
+            .collect::<Vec<_>>();
+        self.query_by_names(
+            QueryBatchRequest::new(operation_names, requested_concurrency),
+            set_overrides,
+            custom_payload,
+        )
+        .await
     }
 
     /// CLI-equivalent fundpage workflow with explicit jobs (supports HTML save destinations).
@@ -90,7 +202,15 @@ impl TefasClient {
         let codes = jobs.iter().map(|job| job.code.clone()).collect::<Vec<_>>();
         let plan =
             build_fundpage_batch_plan(FundpageBatchRequest::new(codes, requested_concurrency));
-        run_fundpage_batch(&self.client, &self.base_url, jobs, plan.concurrency, quiet).await
+        run_fundpage_batch(
+            &self.client,
+            &self.base_url,
+            jobs,
+            plan.concurrency,
+            default_parse_concurrency(),
+            quiet,
+        )
+        .await
     }
 
     /// Query by explicit enum operations.

@@ -84,6 +84,14 @@ Tüm subcommandlar bu flagleri destekler (subcommand'dan **önce** yazılır):
 - `--backend impcurl` secildiginde TLS davranisi `curl-impersonate` tarafinda yonetilir.
 - Otomatik WAF fallback acikken (`TEFAS_AUTO_WAF=1`) ve `impcurl` kuruluysa, `wreq` secimi runtime'da `impcurl`'e gecirilebilir.
 
+## Endpoint Smoke Profili (Onerilen)
+
+- `query` icin baslangic: `--network-concurrency 2`
+- `query` dengeli: `--network-concurrency 4`
+- `fetch` baslangic: `--network-concurrency 2`
+- `fetch` dengeli: `--network-concurrency 4`
+- `8+` seviyeleri sadece ortam izin veriyorsa kullanin (WAF/retry davranisina dikkat).
+
 ## Combined Output Rule
 
 Birden fazla operasyon verildiğinde sonuç tek bir JSON obje olur; anahtarlar operasyon adlarıdır:

@@ -17,7 +17,7 @@ Bu doküman, legacy shell akışlarının `tefas` içindeki subcommand tabanlı 
 Operasyon listesini görmek için:
 
 ```bash
-cargo run -q -p tefas-cli -- query --list
+cargo run -q -p cli -- query --list
 ```
 
 ## Cutover Gates

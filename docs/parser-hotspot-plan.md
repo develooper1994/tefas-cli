@@ -173,7 +173,7 @@ Her asama su sira ile ilerlemeli:
 
 1. lokal unit/integration test
 2. `compare_fundpage_datasets`
-3. gerekirse `cargo run -q -p tefas-cli -- parse ../datasets/fundpage/html/*.html`
+3. gerekirse `cargo run -q -p cli -- parse ../datasets/fundpage/html/*.html`
 4. sadece bundan sonra `cargo xtask tefas bench --no-samply --cargo-profile profileDebug`
 
 Yerelde `perf` veya `samply` calistirilmamali.

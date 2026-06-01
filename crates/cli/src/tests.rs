@@ -171,6 +171,32 @@ fn test_effective_parse_concurrency_prefers_specific_flag() {
 }
 
 #[test]
+fn test_effective_parse_concurrency_clamps_to_guardrail() {
+    let mut global = make_global(BackendChoice::Reqwest);
+    global.parse_concurrency = Some(1_000);
+    assert_eq!(effective_parse_concurrency(&global), MAX_PARSE_CONCURRENCY);
+}
+
+#[test]
+fn test_effective_network_concurrency_clamps_to_guardrail() {
+    let mut global = make_global(BackendChoice::Reqwest);
+    global.network_concurrency = Some(1_000);
+    assert_eq!(
+        effective_network_concurrency(&global, default_request_concurrency(HttpBackend::Reqwest)),
+        MAX_NETWORK_CONCURRENCY
+    );
+}
+
+#[test]
+fn test_effective_network_concurrency_uses_fallback_default() {
+    let global = make_global(BackendChoice::Reqwest);
+    assert_eq!(
+        effective_network_concurrency(&global, default_request_concurrency(HttpBackend::Reqwest)),
+        default_request_concurrency(HttpBackend::Reqwest)
+    );
+}
+
+#[test]
 fn test_default_request_concurrency_is_conservative_for_impcurl() {
     assert_eq!(default_request_concurrency(HttpBackend::Impcurl), 2);
 }
@@ -251,6 +277,15 @@ fn test_cli_fundpage_multiple() {
 }
 
 #[test]
+fn test_cli_fundpage_alias_fp() {
+    let cli = Cli::try_parse_from(["tefas", "fp", "AC5"]).unwrap();
+    match cli.command {
+        Commands::Fundpage { codes, .. } => assert_eq!(codes, vec!["AC5"]),
+        _ => panic!("expected Fundpage command via alias"),
+    }
+}
+
+#[test]
 fn test_cli_fundpage_with_concurrency() {
     let cli =
         Cli::try_parse_from(["tefas", "--concurrency", "6", "fundpage", "AC5", "TLY"]).unwrap();
@@ -261,6 +296,12 @@ fn test_cli_fundpage_with_concurrency() {
 fn test_cli_fundpage_with_network_concurrency() {
     let cli =
         Cli::try_parse_from(["tefas", "--network-concurrency", "5", "fundpage", "AC5"]).unwrap();
+    assert_eq!(cli.global.network_concurrency, Some(5));
+}
+
+#[test]
+fn test_cli_short_network_concurrency_flag() {
+    let cli = Cli::try_parse_from(["tefas", "-n", "5", "fundpage", "AC5"]).unwrap();
     assert_eq!(cli.global.network_concurrency, Some(5));
 }
 
@@ -283,6 +324,15 @@ fn test_cli_query_single_operation() {
             assert_eq!(format, OutputFormat::Json);
         }
         _ => panic!("expected Query command"),
+    }
+}
+
+#[test]
+fn test_cli_query_alias_q() {
+    let cli = Cli::try_parse_from(["tefas", "q", "fonBilgiGetir"]).unwrap();
+    match cli.command {
+        Commands::Query { operation, .. } => assert_eq!(operation.len(), 1),
+        _ => panic!("expected Query command via alias"),
     }
 }
 
@@ -314,6 +364,30 @@ fn test_cli_parse_with_parse_concurrency() {
     let cli =
         Cli::try_parse_from(["tefas", "--parse-concurrency", "7", "parse", "TAR.html"]).unwrap();
     assert_eq!(cli.global.parse_concurrency, Some(7));
+}
+
+#[test]
+fn test_cli_short_parse_concurrency_flag() {
+    let cli = Cli::try_parse_from(["tefas", "-P", "7", "parse", "TAR.html"]).unwrap();
+    assert_eq!(cli.global.parse_concurrency, Some(7));
+}
+
+#[test]
+fn test_cli_parse_alias_p() {
+    let cli = Cli::try_parse_from(["tefas", "p", "TAR.html"]).unwrap();
+    match cli.command {
+        Commands::Parse { inputs, .. } => assert_eq!(inputs, vec!["TAR.html"]),
+        _ => panic!("expected Parse command via alias"),
+    }
+}
+
+#[test]
+fn test_cli_fetch_alias_f() {
+    let cli = Cli::try_parse_from(["tefas", "f", "https://www.tefas.gov.tr"]).unwrap();
+    match cli.command {
+        Commands::Fetch { urls, .. } => assert_eq!(urls, vec!["https://www.tefas.gov.tr"]),
+        _ => panic!("expected Fetch command via alias"),
+    }
 }
 
 #[test]

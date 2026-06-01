@@ -847,28 +847,51 @@ impl NetworkClient {
             debug!(url, attempt, "GET request");
             match self.request_text(Method::GET, url, None, None).await {
                 Ok(text) => {
+                    if Self::looks_like_waf_challenge(&text) {
+                        if attempt < max_retry {
+                            attempt += 1;
+                            warn!(
+                                url,
+                                attempt,
+                                backoff_ms,
+                                class = retry::classify_failure(None, true),
+                                "GET returned WAF challenge page, retrying"
+                            );
+                            sleep(Duration::from_millis(backoff_ms)).await;
+                            backoff_ms = retry::next_backoff_ms(backoff_ms, Some(429), true);
+                            continue;
+                        }
+
+                        return Err(anyhow::anyhow!(retry::failure_hint(url, None, true)));
+                    }
+
                     debug!(url, bytes = text.len(), "GET succeeded");
                     return Ok(text);
                 }
                 Err(err) => {
-                    let status =
-                        err.downcast_ref::<StatusError>()
-                            .map(|e| e.status)
-                            .or_else(|| {
-                                // Also try to extract status from reqwest::Error if it was returned directly
-                                err.downcast_ref::<reqwest::Error>()
-                                    .and_then(|e| e.status().map(|s| s.as_u16()))
-                            });
+                    let status = retry::extract_status(&err);
 
                     if attempt < max_retry && retry::should_retry(status) {
                         attempt += 1;
-                        warn!(url, ?status, attempt, backoff_ms, "GET failed, retrying");
+                        warn!(
+                            url,
+                            ?status,
+                            attempt,
+                            backoff_ms,
+                            class = retry::classify_failure(status, false),
+                            "GET failed, retrying"
+                        );
                         sleep(Duration::from_millis(backoff_ms)).await;
-                        backoff_ms = backoff_ms.saturating_mul(2);
+                        backoff_ms = retry::next_backoff_ms(backoff_ms, status, false);
                         continue;
                     }
-                    warn!(url, ?status, "GET failed, giving up");
-                    return Err(err).with_context(|| format!("request failed for {url}"));
+                    warn!(
+                        url,
+                        ?status,
+                        class = retry::classify_failure(status, false),
+                        "GET failed, giving up"
+                    );
+                    return Err(err).with_context(|| retry::failure_hint(url, status, false));
                 }
             }
         }
@@ -908,28 +931,53 @@ impl NetworkClient {
                 .await
             {
                 Ok(text) => {
+                    if Self::looks_like_waf_challenge(&text) {
+                        if attempt < max_retry {
+                            attempt += 1;
+                            warn!(
+                                url,
+                                ?referer,
+                                attempt,
+                                backoff_ms,
+                                class = retry::classify_failure(None, true),
+                                "POST returned WAF challenge page, retrying"
+                            );
+                            sleep(Duration::from_millis(backoff_ms)).await;
+                            backoff_ms = retry::next_backoff_ms(backoff_ms, Some(429), true);
+                            continue;
+                        }
+
+                        return Err(anyhow::anyhow!(retry::failure_hint(url, None, true)));
+                    }
+
                     debug!(url, bytes = text.len(), "POST succeeded");
                     return serde_json::from_str::<Value>(&text)
                         .with_context(|| format!("invalid JSON response for {url}"));
                 }
                 Err(err) => {
-                    let status =
-                        err.downcast_ref::<StatusError>()
-                            .map(|e| e.status)
-                            .or_else(|| {
-                                err.downcast_ref::<reqwest::Error>()
-                                    .and_then(|e| e.status().map(|s| s.as_u16()))
-                            });
+                    let status = retry::extract_status(&err);
 
                     if attempt < max_retry && retry::should_retry(status) {
                         attempt += 1;
-                        warn!(url, ?status, attempt, backoff_ms, "POST failed, retrying");
+                        warn!(
+                            url,
+                            ?status,
+                            attempt,
+                            backoff_ms,
+                            class = retry::classify_failure(status, false),
+                            "POST failed, retrying"
+                        );
                         sleep(Duration::from_millis(backoff_ms)).await;
-                        backoff_ms = backoff_ms.saturating_mul(2);
+                        backoff_ms = retry::next_backoff_ms(backoff_ms, status, false);
                         continue;
                     }
-                    warn!(url, ?status, "POST failed, giving up");
-                    return Err(err).with_context(|| format!("request failed for {url}"));
+                    warn!(
+                        url,
+                        ?status,
+                        class = retry::classify_failure(status, false),
+                        "POST failed, giving up"
+                    );
+                    return Err(err).with_context(|| retry::failure_hint(url, status, false));
                 }
             }
         }

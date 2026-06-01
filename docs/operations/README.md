@@ -20,10 +20,10 @@ CLI flag detayları için → [`tefas-cli` (crates/cli)](../../crates/cli/README
 ## Yardım Komutları
 
 ```bash
-cargo run -q -p tefas-cli -- --help
-cargo run -q -p tefas-cli -- fundpage --help
-cargo run -q -p tefas-cli -- query --help
-cargo run -q -p tefas-cli -- fetch --help
+cargo run -q -p cli -- --help
+cargo run -q -p cli -- fundpage --help
+cargo run -q -p cli -- query --help
+cargo run -q -p cli -- fetch --help
 ```
 
 ## Temel Kural

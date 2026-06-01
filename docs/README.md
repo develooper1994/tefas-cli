@@ -44,7 +44,7 @@ Tüm teknik belgeler bu dizin altındadır.
 - Belirli bir flag arıyorsanız → [operations/reference.md](operations/reference.md)
 - Network backend seçimi → [operations/low_level_http.md](operations/low_level_http.md)
 - Workspace kökü → [../README.md](../README.md)
-- Shared crate dokümantasyonu → [shared/README.md](shared/README.md)
+- Shared crate dokümantasyonu → [crates/http-client/README.md](../crates/http-client/README.md), [crates/http-config/README.md](../crates/http-config/README.md), [crates/image-util/README.md](../crates/image-util/README.md)
 - Shared HTTP client → [crates/http-client/README.md](crates/http-client/README.md)
 - Shared HTTP config → [crates/http-config/README.md](crates/http-config/README.md)
 - Shared image util → [crates/image-util/README.md](crates/image-util/README.md)

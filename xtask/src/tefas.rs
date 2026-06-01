@@ -6,6 +6,7 @@ use std::fs;
 use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::Command;
+use std::time::Instant;
 
 use crate::common::{
     command_exists, latest_directory, resolve_local_profile_bin, run_checked, sh_quote,
@@ -99,6 +100,8 @@ pub fn run(workspace_root: &Path, task: &str, args: Vec<String>) -> Result<()> {
         "concurrency-sweep" => run_concurrency_sweep(workspace_root, args),
         "ssh-setup" => run_ssh_setup(args),
         "samply-summary" => run_samply_summary(args),
+        "fundpage-matrix" => run_fundpage_matrix(workspace_root, args),
+        "load-smoke" => run_load_smoke(workspace_root, args),
         "fuzz" => run_fuzz(workspace_root, args),
         "test-manual" => run_test_manual(workspace_root, args),
         "ffi-header" => run_ffi_header(workspace_root),
@@ -634,6 +637,554 @@ fn run_lint(workspace_root: &Path) -> Result<()> {
     run_checked(&mut cmd, "shellcheck")
 }
 
+fn run_fundpage_matrix(workspace_root: &Path, args: Vec<String>) -> Result<()> {
+    let mut runs: usize = 3;
+    let mut warmup: usize = 1;
+    let mut network_levels: Vec<usize> = vec![2, 4];
+    let mut parse_levels: Vec<usize> = vec![2, 8];
+    let mut codes: Vec<String> = vec!["AC5".to_string(), "TLY".to_string(), "AFT".to_string()];
+    let mut output: Option<PathBuf> = None;
+    let mut binary: Option<PathBuf> = None;
+
+    let mut i = 0usize;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--runs" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--runs requires a value");
+                };
+                runs = v.parse::<usize>().context("--runs must be a positive integer")?;
+                i += 2;
+            }
+            "--warmup" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--warmup requires a value");
+                };
+                warmup = v
+                    .parse::<usize>()
+                    .context("--warmup must be a non-negative integer")?;
+                i += 2;
+            }
+            "--network" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--network requires a comma-separated list");
+                };
+                network_levels = parse_usize_list(v).context("invalid --network list")?;
+                i += 2;
+            }
+            "--parse" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--parse requires a comma-separated list");
+                };
+                parse_levels = parse_usize_list(v).context("invalid --parse list")?;
+                i += 2;
+            }
+            "--codes" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--codes requires a comma-separated list");
+                };
+                codes = v
+                    .split(',')
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_ascii_uppercase())
+                    .collect();
+                i += 2;
+            }
+            "--output" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--output requires a file path");
+                };
+                output = Some(PathBuf::from(v));
+                i += 2;
+            }
+            "--binary" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--binary requires a file path");
+                };
+                binary = Some(PathBuf::from(v));
+                i += 2;
+            }
+            other => bail!("Unknown option: {other}"),
+        }
+    }
+
+    if runs == 0 {
+        bail!("--runs must be >= 1");
+    }
+    if network_levels.is_empty() {
+        bail!("--network list cannot be empty");
+    }
+    if parse_levels.is_empty() {
+        bail!("--parse list cannot be empty");
+    }
+    if codes.is_empty() {
+        bail!("--codes list cannot be empty");
+    }
+
+    if let Some(path) = &binary
+        && !path.exists()
+    {
+        bail!("binary not found: {}", path.display());
+    }
+
+    let mut csv = String::from("network,parse,median_seconds\n");
+    println!("network,parse,median_seconds");
+
+    for &net in &network_levels {
+        for &parse in &parse_levels {
+            for _ in 0..warmup {
+                let _ = run_fundpage_once(workspace_root, binary.as_deref(), net, parse, &codes)?;
+            }
+            let mut samples = Vec::with_capacity(runs);
+            for _ in 0..runs {
+                samples.push(run_fundpage_once(
+                    workspace_root,
+                    binary.as_deref(),
+                    net,
+                    parse,
+                    &codes,
+                )?);
+            }
+            let median = median_seconds(samples);
+            println!("{net},{parse},{median:.3}");
+            csv.push_str(&format!("{net},{parse},{median:.3}\n"));
+        }
+    }
+
+    if let Some(path) = output {
+        if let Some(parent) = path.parent()
+            && !parent.as_os_str().is_empty()
+        {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&path, csv)
+            .with_context(|| format!("failed to write matrix output: {}", path.display()))?;
+        println!("Saved matrix CSV: {}", path.display());
+    }
+
+    Ok(())
+}
+
+fn run_load_smoke(workspace_root: &Path, args: Vec<String>) -> Result<()> {
+    let mut fund_count: usize = 40;
+    let mut network: usize = 24;
+    let mut parse: usize = 16;
+    let mut runs: usize = 1;
+    let mut warmup: usize = 0;
+    let mut output_dir: Option<PathBuf> = None;
+    let mut binary: Option<PathBuf> = None;
+    let mut explicit_codes: Option<Vec<String>> = None;
+    let mut allow_rejected = false;
+
+    let mut i = 0usize;
+    while i < args.len() {
+        match args[i].as_str() {
+            "--fund-count" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--fund-count requires a value");
+                };
+                fund_count = v.parse::<usize>().context("--fund-count must be an integer")?;
+                i += 2;
+            }
+            "--network" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--network requires a value");
+                };
+                network = v.parse::<usize>().context("--network must be an integer")?;
+                i += 2;
+            }
+            "--parse" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--parse requires a value");
+                };
+                parse = v.parse::<usize>().context("--parse must be an integer")?;
+                i += 2;
+            }
+            "--runs" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--runs requires a value");
+                };
+                runs = v.parse::<usize>().context("--runs must be an integer")?;
+                i += 2;
+            }
+            "--warmup" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--warmup requires a value");
+                };
+                warmup = v.parse::<usize>().context("--warmup must be an integer")?;
+                i += 2;
+            }
+            "--output-dir" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--output-dir requires a value");
+                };
+                output_dir = Some(PathBuf::from(v));
+                i += 2;
+            }
+            "--binary" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--binary requires a value");
+                };
+                binary = Some(PathBuf::from(v));
+                i += 2;
+            }
+            "--codes" => {
+                let Some(v) = args.get(i + 1) else {
+                    bail!("--codes requires a comma-separated value list");
+                };
+                let parsed = v
+                    .split(',')
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(|s| s.to_ascii_uppercase())
+                    .collect::<Vec<_>>();
+                explicit_codes = Some(parsed);
+                i += 2;
+            }
+            "--allow-rejected" => {
+                allow_rejected = true;
+                i += 1;
+            }
+            other => bail!("Unknown option: {other}"),
+        }
+    }
+
+    fund_count = fund_count.max(1);
+    network = network.max(1);
+    parse = parse.max(1);
+    runs = runs.max(1);
+
+    if let Some(path) = &binary
+        && !path.exists()
+    {
+        bail!("binary not found: {}", path.display());
+    }
+
+    let codes = if let Some(explicit) = explicit_codes {
+        if explicit.is_empty() {
+            bail!("--codes list cannot be empty");
+        }
+        explicit
+    } else {
+        collect_codes_from_dataset(workspace_root, fund_count)?
+    };
+
+    let out_dir = output_dir.unwrap_or_else(|| {
+        workspace_root
+            .join("target")
+            .join("smoke-artifacts")
+            .join(timestamp_string())
+    });
+    fs::create_dir_all(&out_dir)
+        .with_context(|| format!("failed to create output directory: {}", out_dir.display()))?;
+
+    let mut measured_fund_times = Vec::new();
+    let mut measured_parse_times = Vec::new();
+    let total_rounds = warmup + runs;
+
+    println!(
+        "load-smoke: codes={} network={} parse={} warmup={} runs={} out={} ",
+        codes.len(),
+        network,
+        parse,
+        warmup,
+        runs,
+        out_dir.display()
+    );
+
+    for round in 0..total_rounds {
+        let round_dir = out_dir.join(format!("round-{}", round + 1));
+        let html_dir = round_dir.join("html");
+        fs::create_dir_all(&html_dir)?;
+        let fund_json = round_dir.join("fundpage.json");
+        let parse_json = round_dir.join("parse.json");
+
+        let fund_elapsed = run_fundpage_smoke_once(
+            workspace_root,
+            binary.as_deref(),
+            network,
+            parse,
+            &codes,
+            &fund_json,
+            &html_dir,
+        )?;
+
+        let html_inputs = collect_html_inputs(&html_dir)?;
+        if html_inputs.is_empty() {
+            bail!("no downloaded html files were produced in {}", html_dir.display());
+        }
+
+        let rejected = count_request_rejected_files(&html_inputs)?;
+        if rejected > 0 && !allow_rejected {
+            bail!(
+                "load-smoke detected {} rejected HTML response(s). Re-run with lower concurrency or use --allow-rejected for diagnostics-only runs",
+                rejected
+            );
+        }
+
+        let parse_elapsed = run_parse_smoke_once(
+            workspace_root,
+            binary.as_deref(),
+            parse,
+            &html_inputs,
+            &parse_json,
+        )?;
+
+        println!(
+            "round={} kind={} fundpage_seconds={:.3} parse_seconds={:.3} html_count={} rejected_html={}",
+            round + 1,
+            if round < warmup { "warmup" } else { "measure" },
+            fund_elapsed,
+            parse_elapsed,
+            html_inputs.len(),
+            rejected
+        );
+
+        if round >= warmup {
+            measured_fund_times.push(fund_elapsed);
+            measured_parse_times.push(parse_elapsed);
+        }
+    }
+
+    let fund_median = median_seconds(measured_fund_times.clone());
+    let parse_median = median_seconds(measured_parse_times.clone());
+    println!("summary,fundpage_median_seconds,{fund_median:.3}");
+    println!("summary,parse_median_seconds,{parse_median:.3}");
+
+    let mut csv = String::from("phase,median_seconds,samples\n");
+    csv.push_str(&format!("fundpage,{fund_median:.3},{}\n", measured_fund_times.len()));
+    csv.push_str(&format!("parse,{parse_median:.3},{}\n", measured_parse_times.len()));
+    let summary_path = out_dir.join("summary.csv");
+    fs::write(&summary_path, csv)
+        .with_context(|| format!("failed to write summary: {}", summary_path.display()))?;
+    println!("Saved load smoke summary: {}", summary_path.display());
+
+    Ok(())
+}
+
+fn count_request_rejected_files(inputs: &[PathBuf]) -> Result<usize> {
+    let mut rejected = 0usize;
+    for path in inputs {
+        let content = fs::read_to_string(path)
+            .with_context(|| format!("failed to read html file: {}", path.display()))?;
+        if content.contains("Request Rejected") {
+            rejected += 1;
+        }
+    }
+    Ok(rejected)
+}
+
+fn collect_codes_from_dataset(workspace_root: &Path, count: usize) -> Result<Vec<String>> {
+    let dataset_dir = workspace_root.join("datasets").join("fundpage").join("html");
+    if !dataset_dir.exists() {
+        bail!("dataset directory not found: {}", dataset_dir.display());
+    }
+
+    let mut codes = Vec::new();
+    for entry in fs::read_dir(&dataset_dir)
+        .with_context(|| format!("failed to read dataset directory: {}", dataset_dir.display()))?
+    {
+        let entry = entry?;
+        let path = entry.path();
+        let is_html = path.extension().and_then(OsStr::to_str) == Some("html");
+        if !is_html {
+            continue;
+        }
+        let Some(stem) = path.file_stem().and_then(OsStr::to_str) else {
+            continue;
+        };
+        codes.push(stem.to_ascii_uppercase());
+    }
+    codes.sort();
+    codes.dedup();
+    if codes.is_empty() {
+        bail!("no dataset fund codes found in {}", dataset_dir.display());
+    }
+    codes.truncate(count.min(codes.len()));
+    Ok(codes)
+}
+
+fn collect_html_inputs(dir: &Path) -> Result<Vec<PathBuf>> {
+    let mut files = Vec::new();
+    for entry in
+        fs::read_dir(dir).with_context(|| format!("failed to read html dir: {}", dir.display()))?
+    {
+        let entry = entry?;
+        let path = entry.path();
+        if path.extension().and_then(OsStr::to_str) == Some("html") {
+            files.push(path);
+        }
+    }
+    files.sort();
+    Ok(files)
+}
+
+fn run_fundpage_smoke_once(
+    workspace_root: &Path,
+    binary: Option<&Path>,
+    network: usize,
+    parse: usize,
+    codes: &[String],
+    output_json: &Path,
+    html_dir: &Path,
+) -> Result<f64> {
+    let mut cmd = if let Some(bin) = binary {
+        Command::new(bin)
+    } else {
+        let mut c = Command::new("cargo");
+        c.current_dir(workspace_root)
+            .arg("run")
+            .arg("-q")
+            .arg("-p")
+            .arg("cli")
+            .arg("--");
+        c
+    };
+
+    cmd.arg("--quiet")
+        .arg("--network-concurrency")
+        .arg(network.to_string())
+        .arg("--parse-concurrency")
+        .arg(parse.to_string())
+        .arg("fundpage");
+    for code in codes {
+        cmd.arg(code);
+    }
+    cmd.arg("--output")
+        .arg(output_json)
+        .arg("--save-html")
+        .arg(html_dir)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+
+    let start = Instant::now();
+    let status = cmd.status().context("failed to execute fundpage load smoke run")?;
+    let elapsed = start.elapsed().as_secs_f64();
+    if !status.success() {
+        bail!("fundpage load smoke failed with status {status}");
+    }
+    Ok(elapsed)
+}
+
+fn run_parse_smoke_once(
+    workspace_root: &Path,
+    binary: Option<&Path>,
+    parse: usize,
+    html_inputs: &[PathBuf],
+    output_json: &Path,
+) -> Result<f64> {
+    let mut cmd = if let Some(bin) = binary {
+        Command::new(bin)
+    } else {
+        let mut c = Command::new("cargo");
+        c.current_dir(workspace_root)
+            .arg("run")
+            .arg("-q")
+            .arg("-p")
+            .arg("cli")
+            .arg("--");
+        c
+    };
+
+    cmd.arg("--quiet")
+        .arg("--parse-concurrency")
+        .arg(parse.to_string())
+        .arg("parse");
+    for input in html_inputs {
+        cmd.arg(input);
+    }
+    cmd.arg("--output")
+        .arg(output_json)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+
+    let start = Instant::now();
+    let status = cmd.status().context("failed to execute parse load smoke run")?;
+    let elapsed = start.elapsed().as_secs_f64();
+    if !status.success() {
+        bail!("parse load smoke failed with status {status}");
+    }
+    Ok(elapsed)
+}
+
+fn run_fundpage_once(
+    workspace_root: &Path,
+    binary: Option<&Path>,
+    net: usize,
+    parse: usize,
+    codes: &[String],
+) -> Result<f64> {
+    let out = env::temp_dir().join(format!(
+        "tefas-fundpage-matrix-{}-{}-{}.json",
+        net,
+        parse,
+        timestamp_string()
+    ));
+    let mut cmd = if let Some(bin) = binary {
+        Command::new(bin)
+    } else {
+        let mut c = Command::new("cargo");
+        c.current_dir(workspace_root)
+            .arg("run")
+            .arg("-q")
+            .arg("-p")
+            .arg("cli")
+            .arg("--");
+        c
+    };
+
+    cmd.arg("--quiet")
+        .arg("--network-concurrency")
+        .arg(net.to_string())
+        .arg("--parse-concurrency")
+        .arg(parse.to_string())
+        .arg("fundpage");
+    for c in codes {
+        cmd.arg(c);
+    }
+    cmd.arg("--output")
+        .arg(&out)
+        .stdout(std::process::Stdio::null())
+        .stderr(std::process::Stdio::null());
+
+    let start = Instant::now();
+    let status = cmd
+        .status()
+        .context("failed to execute fundpage matrix run")?;
+    let elapsed = start.elapsed().as_secs_f64();
+    if !status.success() {
+        bail!(
+            "fundpage matrix run failed (network={}, parse={})",
+            net,
+            parse
+        );
+    }
+    let _ = fs::remove_file(out);
+    Ok(elapsed)
+}
+
+fn parse_usize_list(value: &str) -> Result<Vec<usize>> {
+    let mut out = Vec::new();
+    for part in value.split(',') {
+        let item = part.trim();
+        if item.is_empty() {
+            continue;
+        }
+        let parsed = item
+            .parse::<usize>()
+            .with_context(|| format!("invalid integer: {item}"))?;
+        out.push(parsed.max(1));
+    }
+    Ok(out)
+}
+
+fn median_seconds(mut samples: Vec<f64>) -> f64 {
+    samples.sort_by(|a, b| a.total_cmp(b));
+    let mid = samples.len() / 2;
+    samples[mid]
+}
+
 fn collect_shell_scripts(dir: &Path, out: &mut Vec<PathBuf>) -> Result<()> {
     for entry in
         fs::read_dir(dir).with_context(|| format!("failed to read dir: {}", dir.display()))?
@@ -831,7 +1382,7 @@ fn resolve_impersonate_binary() -> Option<PathBuf> {
 
 pub fn print_help() {
     println!(
-        "tefas xtask commands:\n  cargo xtask tefas pgo [generate|use|clean]\n  cargo xtask tefas lint\n  cargo xtask tefas probe [FUND_CODE|URL]\n  cargo xtask tefas bench [args...]\n  cargo xtask tefas profile [args...]\n  cargo xtask tefas perf-remote [args...]\n  cargo xtask tefas samply-remote [--host ALIAS --repo PATH --cargo-profile NAME --workload parse|fundpage|query|fetch --output FILE]\n  cargo xtask tefas concurrency-sweep [--host ALIAS --repo PATH --cargo-profile NAME --runs N --levels 1,2,4 --workloads fundpage,query,fetch,parse --query-ops a,b,c --output FILE]\n  cargo xtask tefas ssh-setup [--host USER@HOST --key PATH --alias ALIAS]\n  cargo xtask tefas samply-summary <profile.json|profile.json.gz> [--top N]\n  cargo xtask tefas fuzz [--dry-run] [--binary PATH]\n  cargo xtask tefas test-manual [fpl-toplam|fpl-fonturu]\n  cargo xtask tefas ffi-header"
+        "tefas xtask commands:\n  cargo xtask tefas pgo [generate|use|clean]\n  cargo xtask tefas lint\n  cargo xtask tefas probe [FUND_CODE|URL]\n  cargo xtask tefas bench [args...]\n  cargo xtask tefas profile [args...]\n  cargo xtask tefas perf-remote [args...]\n  cargo xtask tefas fundpage-matrix [--runs N] [--warmup N] [--network 2,4] [--parse 2,8] [--codes AC5,TLY,AFT] [--output FILE] [--binary PATH]\n  cargo xtask tefas load-smoke [--fund-count N] [--network N] [--parse N] [--runs N] [--warmup N] [--codes A,B,C] [--output-dir DIR] [--binary PATH] [--allow-rejected]\n  cargo xtask tefas samply-remote [--host ALIAS --repo PATH --cargo-profile NAME --workload parse|fundpage|query|fetch --output FILE]\n  cargo xtask tefas concurrency-sweep [--host ALIAS --repo PATH --cargo-profile NAME --runs N --levels 1,2,4 --workloads fundpage,query,fetch,parse --query-ops a,b,c --output FILE]\n  cargo xtask tefas ssh-setup [--host USER@HOST --key PATH --alias ALIAS]\n  cargo xtask tefas samply-summary <profile.json|profile.json.gz> [--top N]\n  cargo xtask tefas fuzz [--dry-run] [--binary PATH]\n  cargo xtask tefas test-manual [fpl-toplam|fpl-fonturu]\n  cargo xtask tefas ffi-header"
     );
 }
 
