@@ -588,8 +588,10 @@ async fn main() -> anyhow::Result<()> {
             format,
         } => {
             let cfg = build_app_config(&cli.global, false);
-            let network_concurrency =
-                effective_network_concurrency(&cli.global, default_request_concurrency(cfg.backend));
+            let network_concurrency = effective_network_concurrency(
+                &cli.global,
+                default_request_concurrency(cfg.backend),
+            );
 
             // --list and --info are discovery-only; reject mixing with operation args
             if (list || info.is_some()) && (!operation.is_empty() || !old.is_empty()) {
@@ -832,10 +834,7 @@ async fn main() -> anyhow::Result<()> {
             if format == OutputFormat::Humanize
                 && final_val.as_object().map(|m| m.len()).unwrap_or(0) == 1
             {
-                if let Some(raw) = final_val
-                    .as_object()
-                    .and_then(|map| map.values().next())
-                {
+                if let Some(raw) = final_val.as_object().and_then(|map| map.values().next()) {
                     let normalized = tefas::normalize_fund_summary_list(raw);
                     if normalized.is_empty() {
                         println!("{}", json_to_text(cfg.pretty, &final_val)?);
@@ -865,8 +864,10 @@ async fn main() -> anyhow::Result<()> {
             }
             let mut cfg = build_app_config(&global_mod, true);
             cfg.auth.skip_preflight = skip_preflight;
-            let network_concurrency =
-                effective_network_concurrency(&cli.global, default_request_concurrency(cfg.backend));
+            let network_concurrency = effective_network_concurrency(
+                &cli.global,
+                default_request_concurrency(cfg.backend),
+            );
 
             let client = get_client(&cfg).await?;
             let fetch_plan = build_fetch_batch_plan(FetchBatchRequest::new(

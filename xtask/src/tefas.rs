@@ -653,7 +653,9 @@ fn run_fundpage_matrix(workspace_root: &Path, args: Vec<String>) -> Result<()> {
                 let Some(v) = args.get(i + 1) else {
                     bail!("--runs requires a value");
                 };
-                runs = v.parse::<usize>().context("--runs must be a positive integer")?;
+                runs = v
+                    .parse::<usize>()
+                    .context("--runs must be a positive integer")?;
                 i += 2;
             }
             "--warmup" => {
@@ -784,7 +786,9 @@ fn run_load_smoke(workspace_root: &Path, args: Vec<String>) -> Result<()> {
                 let Some(v) = args.get(i + 1) else {
                     bail!("--fund-count requires a value");
                 };
-                fund_count = v.parse::<usize>().context("--fund-count must be an integer")?;
+                fund_count = v
+                    .parse::<usize>()
+                    .context("--fund-count must be an integer")?;
                 i += 2;
             }
             "--network" => {
@@ -912,7 +916,10 @@ fn run_load_smoke(workspace_root: &Path, args: Vec<String>) -> Result<()> {
 
         let html_inputs = collect_html_inputs(&html_dir)?;
         if html_inputs.is_empty() {
-            bail!("no downloaded html files were produced in {}", html_dir.display());
+            bail!(
+                "no downloaded html files were produced in {}",
+                html_dir.display()
+            );
         }
 
         let rejected = count_request_rejected_files(&html_inputs)?;
@@ -953,8 +960,14 @@ fn run_load_smoke(workspace_root: &Path, args: Vec<String>) -> Result<()> {
     println!("summary,parse_median_seconds,{parse_median:.3}");
 
     let mut csv = String::from("phase,median_seconds,samples\n");
-    csv.push_str(&format!("fundpage,{fund_median:.3},{}\n", measured_fund_times.len()));
-    csv.push_str(&format!("parse,{parse_median:.3},{}\n", measured_parse_times.len()));
+    csv.push_str(&format!(
+        "fundpage,{fund_median:.3},{}\n",
+        measured_fund_times.len()
+    ));
+    csv.push_str(&format!(
+        "parse,{parse_median:.3},{}\n",
+        measured_parse_times.len()
+    ));
     let summary_path = out_dir.join("summary.csv");
     fs::write(&summary_path, csv)
         .with_context(|| format!("failed to write summary: {}", summary_path.display()))?;
@@ -976,15 +989,21 @@ fn count_request_rejected_files(inputs: &[PathBuf]) -> Result<usize> {
 }
 
 fn collect_codes_from_dataset(workspace_root: &Path, count: usize) -> Result<Vec<String>> {
-    let dataset_dir = workspace_root.join("datasets").join("fundpage").join("html");
+    let dataset_dir = workspace_root
+        .join("datasets")
+        .join("fundpage")
+        .join("html");
     if !dataset_dir.exists() {
         bail!("dataset directory not found: {}", dataset_dir.display());
     }
 
     let mut codes = Vec::new();
-    for entry in fs::read_dir(&dataset_dir)
-        .with_context(|| format!("failed to read dataset directory: {}", dataset_dir.display()))?
-    {
+    for entry in fs::read_dir(&dataset_dir).with_context(|| {
+        format!(
+            "failed to read dataset directory: {}",
+            dataset_dir.display()
+        )
+    })? {
         let entry = entry?;
         let path = entry.path();
         let is_html = path.extension().and_then(OsStr::to_str) == Some("html");
@@ -1059,7 +1078,9 @@ fn run_fundpage_smoke_once(
         .stderr(std::process::Stdio::null());
 
     let start = Instant::now();
-    let status = cmd.status().context("failed to execute fundpage load smoke run")?;
+    let status = cmd
+        .status()
+        .context("failed to execute fundpage load smoke run")?;
     let elapsed = start.elapsed().as_secs_f64();
     if !status.success() {
         bail!("fundpage load smoke failed with status {status}");
@@ -1100,7 +1121,9 @@ fn run_parse_smoke_once(
         .stderr(std::process::Stdio::null());
 
     let start = Instant::now();
-    let status = cmd.status().context("failed to execute parse load smoke run")?;
+    let status = cmd
+        .status()
+        .context("failed to execute parse load smoke run")?;
     let elapsed = start.elapsed().as_secs_f64();
     if !status.success() {
         bail!("parse load smoke failed with status {status}");

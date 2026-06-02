@@ -11,10 +11,7 @@ fn external_consumer_can_use_public_api_surface() {
 
     let _fetch = FetchBatchRequest::new(vec!["https://www.tefas.gov.tr".to_string()], None, 4);
     let _fund = FundpageBatchRequest::new(vec!["AC5".to_string()], Some(4));
-    let _query = QueryBatchRequest::new(
-        vec![QueryOperationName::new("fonBilgiGetir")],
-        Some(4),
-    );
+    let _query = QueryBatchRequest::new(vec![QueryOperationName::new("fonBilgiGetir")], Some(4));
 
     let opts = FundpageRunOptions {
         network_concurrency: Some(8),

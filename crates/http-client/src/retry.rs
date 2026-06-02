@@ -15,10 +15,18 @@ pub(super) fn should_retry(status: Option<u16>) -> bool {
     }
 }
 
-pub(super) fn next_backoff_ms(current_backoff_ms: u64, status: Option<u16>, waf_challenge: bool) -> u64 {
+pub(super) fn next_backoff_ms(
+    current_backoff_ms: u64,
+    status: Option<u16>,
+    waf_challenge: bool,
+) -> u64 {
     let base = current_backoff_ms.max(1);
     // Rate limits and WAF challenges typically need a stronger slowdown than generic retries.
-    let factor = if waf_challenge || status == Some(429) { 3 } else { 2 };
+    let factor = if waf_challenge || status == Some(429) {
+        3
+    } else {
+        2
+    };
     base.saturating_mul(factor)
 }
 
@@ -94,7 +102,10 @@ mod tests {
     #[test]
     fn classify_failure_variants() {
         assert_eq!(classify_failure(Some(429), false), "rate_limited");
-        assert_eq!(classify_failure(Some(403), false), "blocked_or_unauthorized");
+        assert_eq!(
+            classify_failure(Some(403), false),
+            "blocked_or_unauthorized"
+        );
         assert_eq!(classify_failure(None, false), "network_error");
         assert_eq!(classify_failure(None, true), "waf_challenge");
     }

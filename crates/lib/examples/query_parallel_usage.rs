@@ -16,6 +16,9 @@ async fn main() -> anyhow::Result<()> {
         )
         .await?;
 
-    println!("query keys: {}", merged.as_object().map(|m| m.len()).unwrap_or(0));
+    println!(
+        "query keys: {}",
+        merged.as_object().map(|m| m.len()).unwrap_or(0)
+    );
     Ok(())
 }

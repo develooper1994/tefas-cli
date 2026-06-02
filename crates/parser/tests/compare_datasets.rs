@@ -71,6 +71,49 @@ fn strict_dataset_mode() -> bool {
     std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1")
 }
 
+enum CompareDatasetLayout {
+    LegacyRaw {
+        raw_dir: PathBuf,
+    },
+    SharedFundpage {
+        html_dir: PathBuf,
+        json_dir: PathBuf,
+    },
+}
+
+fn resolve_compare_dataset_layout(manifest: &Path) -> Option<CompareDatasetLayout> {
+    let legacy_raw_candidates = [
+        manifest.join("../../tests/datasets/raw"),
+        manifest.join("../../../tefas/FundPage/datasets/raw"),
+        manifest.join("../../../FundPage/datasets/raw"),
+    ];
+    if let Some(raw_dir) = legacy_raw_candidates
+        .iter()
+        .find_map(|p| p.canonicalize().ok())
+    {
+        return Some(CompareDatasetLayout::LegacyRaw { raw_dir });
+    }
+
+    let shared_fundpage_candidates = [
+        manifest.join("../../datasets/fundpage"),
+        manifest.join("../../../datasets/fundpage"),
+        manifest.join("../../../../../datasets/fundpage"),
+        manifest.join("../../../../../tefas/datasets/fundpage"),
+    ];
+    if let Some(root) = shared_fundpage_candidates
+        .iter()
+        .find_map(|p| p.canonicalize().ok())
+    {
+        let html_dir = root.join("html");
+        let json_dir = root.join("json");
+        if html_dir.is_dir() && json_dir.is_dir() {
+            return Some(CompareDatasetLayout::SharedFundpage { html_dir, json_dir });
+        }
+    }
+
+    None
+}
+
 fn resolve_dataset_root(candidates: &[PathBuf], label: &str) -> Option<PathBuf> {
     if let Some(path) = candidates.iter().find_map(|p| p.canonicalize().ok()) {
         return Some(path);
@@ -191,30 +234,30 @@ fn validate_dataset_metadata_documents() {
 #[test]
 fn compare_datasets() {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let candidates = [
-        manifest.join("../../tests/datasets/raw"),
-        manifest.join("../../../tefas/FundPage/datasets/raw"),
-        manifest.join("../../../FundPage/datasets/raw"),
-    ];
-
-    let dir = match candidates.iter().find_map(|p| p.canonicalize().ok()) {
-        Some(dir) => dir,
+    let layout = match resolve_compare_dataset_layout(manifest) {
+        Some(layout) => layout,
         None => {
-            let checked = candidates
-                .iter()
-                .map(|p| p.display().to_string())
-                .collect::<Vec<_>>()
-                .join(", ");
-            let strict_mode =
-                std::env::var("TEFAS_STRICT_DATASET_PARITY").ok().as_deref() == Some("1");
-            if strict_mode {
+            let checked = [
+                manifest.join("../../tests/datasets/raw"),
+                manifest.join("../../../tefas/FundPage/datasets/raw"),
+                manifest.join("../../../FundPage/datasets/raw"),
+                manifest.join("../../datasets/fundpage"),
+                manifest.join("../../../datasets/fundpage"),
+                manifest.join("../../../../../datasets/fundpage"),
+                manifest.join("../../../../../tefas/datasets/fundpage"),
+            ]
+            .iter()
+            .map(|p| p.display().to_string())
+            .collect::<Vec<_>>()
+            .join(", ");
+            if strict_dataset_mode() {
                 panic!(
-                    "compare_datasets: strict modda datasets/raw fixture dizini bulunamadi. Kontrol edilen yollar: {}",
+                    "compare_datasets: strict modda dataset fixture dizini bulunamadi. Kontrol edilen yollar: {}",
                     checked
                 );
             }
             eprintln!(
-                "compare_datasets: skip - datasets/raw fixture dizini bulunamadi. Kontrol edilen yollar: {} (strict icin CI=true veya TEFAS_STRICT_DATASET_PARITY=1 kullan)",
+                "compare_datasets: skip - dataset fixture dizini bulunamadi. Kontrol edilen yollar: {} (strict icin CI=true veya TEFAS_STRICT_DATASET_PARITY=1 kullan)",
                 checked
             );
             return;
@@ -223,10 +266,15 @@ fn compare_datasets() {
 
     let mut html_file_count = 0usize;
     let mut failures = Vec::new();
-    for entry in fs::read_dir(&dir).unwrap_or_else(|e| {
+    let html_dir = match &layout {
+        CompareDatasetLayout::LegacyRaw { raw_dir } => raw_dir,
+        CompareDatasetLayout::SharedFundpage { html_dir, .. } => html_dir,
+    };
+
+    for entry in fs::read_dir(html_dir).unwrap_or_else(|e| {
         panic!(
             "compare_datasets: read_dir basarisiz ({}): {}",
-            dir.display(),
+            html_dir.display(),
             e
         )
     }) {
@@ -235,10 +283,16 @@ fn compare_datasets() {
         let path = entry.path();
         if path.extension().and_then(|s| s.to_str()) == Some("html") {
             html_file_count += 1;
-            let expected = path.with_file_name(format!(
-                "{}_parsed.json",
-                path.file_stem().unwrap().to_string_lossy()
-            ));
+            let expected = match &layout {
+                CompareDatasetLayout::LegacyRaw { .. } => path.with_file_name(format!(
+                    "{}_parsed.json",
+                    path.file_stem().unwrap().to_string_lossy()
+                )),
+                CompareDatasetLayout::SharedFundpage { json_dir, .. } => json_dir.join(format!(
+                    "{}.json",
+                    path.file_stem().unwrap().to_string_lossy()
+                )),
+            };
             if !expected.exists() {
                 eprintln!(
                     "Skipping {} (no expected {})",
@@ -291,7 +345,7 @@ fn compare_datasets() {
     assert!(
         html_file_count > 0,
         "compare_datasets: fixture dizininde hicbir .html dosyasi yok ({})",
-        dir.display()
+        html_dir.display()
     );
     if !failures.is_empty() {
         panic!("Dataset comparison failures:\n{}", failures.join("\n"));

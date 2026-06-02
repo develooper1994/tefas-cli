@@ -96,21 +96,19 @@ pub async fn run_fundpage_batch(
 
     while let Some(joined) = fetch_set.join_next().await {
         match joined {
-            Ok((idx, code, Ok(html))) => {
-                match parse_tx.send((idx, code.clone(), html)).await {
-                    Ok(()) => {
-                        parse_jobs += 1;
-                    }
-                    Err(_e) => {
-                        ordered_results[idx] = Some((
-                            code,
-                            Err(anyhow::anyhow!(
-                                "parse queue closed before accepting fetched document"
-                            )),
-                        ));
-                    }
+            Ok((idx, code, Ok(html))) => match parse_tx.send((idx, code.clone(), html)).await {
+                Ok(()) => {
+                    parse_jobs += 1;
                 }
-            }
+                Err(_e) => {
+                    ordered_results[idx] = Some((
+                        code,
+                        Err(anyhow::anyhow!(
+                            "parse queue closed before accepting fetched document"
+                        )),
+                    ));
+                }
+            },
             Ok((idx, code, Err(e))) => {
                 ordered_results[idx] = Some((code, Err(e)));
             }
@@ -201,7 +199,13 @@ pub async fn run_query_batch(
         let Some(job) = pending_jobs.next() else {
             break;
         };
-        spawn_query_task(&mut set, client, Arc::clone(&overrides), custom.clone(), job);
+        spawn_query_task(
+            &mut set,
+            client,
+            Arc::clone(&overrides),
+            custom.clone(),
+            job,
+        );
     }
 
     let mut ordered = Vec::new();
@@ -209,7 +213,13 @@ pub async fn run_query_batch(
         let (idx, name, val) = joined.context("query task join error")??;
         ordered.push((idx, name, val));
         if let Some(job) = pending_jobs.next() {
-            spawn_query_task(&mut set, client, Arc::clone(&overrides), custom.clone(), job);
+            spawn_query_task(
+                &mut set,
+                client,
+                Arc::clone(&overrides),
+                custom.clone(),
+                job,
+            );
         }
     }
 
@@ -373,10 +383,7 @@ mod tests {
     #[test]
     fn apply_set_overrides_updates_and_inserts() {
         let mut payload = json!({"a": 1, "b": "x"});
-        let overrides = vec![
-            ("a".to_string(), json!(99)),
-            ("c".to_string(), json!(true)),
-        ];
+        let overrides = vec![("a".to_string(), json!(99)), ("c".to_string(), json!(true))];
 
         apply_set_overrides(&mut payload, &overrides);
 

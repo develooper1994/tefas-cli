@@ -40,6 +40,11 @@ fn main() -> Result<()> {
         .and_then(|v| v.as_str())
         .unwrap_or("unknown");
 
-    println!("parsed fixture {} => code={}, name={}", fixture.display(), code, name);
+    println!(
+        "parsed fixture {} => code={}, name={}",
+        fixture.display(),
+        code,
+        name
+    );
     Ok(())
 }
