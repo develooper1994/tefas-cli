@@ -24,7 +24,8 @@ fn extract_rsc_fast_fields_collects_known_profile_fields() {
     </script>
     "#;
 
-    let out = extract_rsc_fast_fields(html);
+    let payloads = extract_next_f_string_payloads(html);
+    let out = extract_rsc_fast_fields_from_payloads(&payloads);
     assert_eq!(out.get("fon_kodu").and_then(|v| v.as_str()), Some("AC5"));
     assert_eq!(
         out.get("isin_kodu").and_then(|v| v.as_str()),
@@ -44,7 +45,8 @@ fn extract_rsc_fast_fields_collects_numeric_fields() {
     </script>
     "#;
 
-    let out = extract_rsc_fast_fields(html);
+    let payloads = extract_next_f_string_payloads(html);
+    let out = extract_rsc_fast_fields_from_payloads(&payloads);
     assert_eq!(
         out.get("fon_toplam_deger_tl")
             .and_then(|v| v.as_f64())

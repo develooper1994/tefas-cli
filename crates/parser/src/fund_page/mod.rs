@@ -106,6 +106,15 @@ const FALLBACK_LABELS: &[&str] = &[
     "Son 5 Yıl Getirisi",
 ];
 
+const RETURN_SPECS: &[(&str, &str, &str)] = &[
+    ("Son 1 Ay Getirisi", "son_1ay_getiri_raw", "son_1ay_getiri_pct"),
+    ("Son 3 Ay Getirisi", "son_3ay_getiri_raw", "son_3ay_getiri_pct"),
+    ("Son 6 Ay Getirisi", "son_6ay_getiri_raw", "son_6ay_getiri_pct"),
+    ("Son 1 Yıl Getirisi", "son_1yil_getiri_raw", "son_1yil_getiri_pct"),
+    ("Son 3 Yıl Getirisi", "son_3yil_getiri_raw", "son_3yil_getiri_pct"),
+    ("Son 5 Yıl Getirisi", "son_5yil_getiri_raw", "son_5yil_getiri_pct"),
+];
+
 // Canonical profile label -> output key mapping reused across parse calls.
 static PROFILE_MAPPING: &[(&str, &str)] = &[
     ("Fon Kodu", "fon_kodu"),
@@ -762,26 +771,64 @@ fn extract_next_f_string_payloads(text: &str) -> Vec<String> {
     out
 }
 
-fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
+type RscTokenSpan = (usize, usize);
+
+struct RscPayloadView<'a> {
+    payload: &'a str,
+}
+
+impl<'a> RscPayloadView<'a> {
+    fn new(payload: &'a str) -> Self {
+        Self { payload }
+    }
+
+    fn parse_string_token(&self, span: Option<RscTokenSpan>) -> Option<String> {
+        let (start, end) = span?;
+        let token = &self.payload[start..end];
+        if token == "null" || !token.starts_with('"') {
+            return None;
+        }
+        parse_json_string_literal(token)
+            .map(|s| decode_html_entities(&s))
+            .filter(|s| !s.trim().is_empty())
+    }
+
+    fn parse_number_token(&self, span: Option<RscTokenSpan>) -> Option<f64> {
+        let (start, end) = span?;
+        let token = &self.payload[start..end];
+        if token == "null" {
+            return None;
+        }
+        if token.starts_with('"') {
+            if let Some(decoded) = parse_json_string_literal(token) {
+                return parse_number_tr(Some(&decoded));
+            }
+            return None;
+        }
+        token.parse::<f64>().ok()
+    }
+}
+
+fn extract_rsc_fast_fields_from_payloads(payloads: &[String]) -> Map<String, Value> {
     let mut out = Map::new();
 
-    for payload in extract_next_f_string_payloads(text) {
-        type Span = (usize, usize);
+    for payload in payloads {
+        let view = RscPayloadView::new(payload);
 
-        let mut fon_kodu_tok: Option<Span> = None;
-        let mut fund_code_tok: Option<Span> = None;
-        let mut isin_kodu_tok: Option<Span> = None;
-        let mut isin_tok: Option<Span> = None;
-        let mut kap_link_tok: Option<Span> = None;
-        let mut fon_toplam_deger_tok: Option<Span> = None;
-        let mut fon_toplam_deger_tl_tok: Option<Span> = None;
-        let mut fund_total_value_tok: Option<Span> = None;
-        let mut pazar_payi_tok: Option<Span> = None;
-        let mut market_share_tok: Option<Span> = None;
-        let mut fon_risk_degeri_tok: Option<Span> = None;
-        let mut risk_value_tok: Option<Span> = None;
+        let mut fon_kodu_tok: Option<RscTokenSpan> = None;
+        let mut fund_code_tok: Option<RscTokenSpan> = None;
+        let mut isin_kodu_tok: Option<RscTokenSpan> = None;
+        let mut isin_tok: Option<RscTokenSpan> = None;
+        let mut kap_link_tok: Option<RscTokenSpan> = None;
+        let mut fon_toplam_deger_tok: Option<RscTokenSpan> = None;
+        let mut fon_toplam_deger_tl_tok: Option<RscTokenSpan> = None;
+        let mut fund_total_value_tok: Option<RscTokenSpan> = None;
+        let mut pazar_payi_tok: Option<RscTokenSpan> = None;
+        let mut market_share_tok: Option<RscTokenSpan> = None;
+        let mut fon_risk_degeri_tok: Option<RscTokenSpan> = None;
+        let mut risk_value_tok: Option<RscTokenSpan> = None;
 
-        for_each_json_field(&payload, |ks, ke, vs, ve| {
+        for_each_json_field(payload, |ks, ke, vs, ve| {
             let key = &payload[ks..ke];
             let span = (vs, ve);
             match key {
@@ -810,37 +857,11 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
             true
         });
 
-        let parse_string_token = |span: Span| -> Option<String> {
-            let token = &payload[span.0..span.1];
-            if token == "null" {
-                return None;
-            }
-            if token.starts_with('"') {
-                return parse_json_string_literal(token).filter(|s| !s.trim().is_empty());
-            }
-            None
-        };
-
-        let parse_number_token = |span: Span| -> Option<f64> {
-            let token = &payload[span.0..span.1];
-            if token == "null" {
-                return None;
-            }
-            if token.starts_with('"') {
-                if let Some(decoded) = parse_json_string_literal(token) {
-                    return parse_number_tr(Some(&decoded));
-                }
-                return None;
-            }
-            token.parse::<f64>().ok()
-        };
-
         if !out.contains_key("fon_kodu_raw")
             && let Some(code) = fon_kodu_tok
-                .and_then(parse_string_token)
-                .or_else(|| fund_code_tok.and_then(parse_string_token))
+                .and_then(|span| view.parse_string_token(Some(span)))
+                .or_else(|| fund_code_tok.and_then(|span| view.parse_string_token(Some(span))))
         {
-            let code = decode_html_entities(&code);
             if !code.trim().is_empty() {
                 out.insert("fon_kodu_raw".to_string(), Value::String(code.clone()));
                 out.insert("fon_kodu".to_string(), Value::String(code));
@@ -849,10 +870,9 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
 
         if !out.contains_key("isin_kodu_raw")
             && let Some(isin) = isin_kodu_tok
-                .and_then(parse_string_token)
-                .or_else(|| isin_tok.and_then(parse_string_token))
+                .and_then(|span| view.parse_string_token(Some(span)))
+                .or_else(|| isin_tok.and_then(|span| view.parse_string_token(Some(span))))
         {
-            let isin = decode_html_entities(&isin);
             if !isin.trim().is_empty() {
                 out.insert("isin_kodu_raw".to_string(), Value::String(isin.clone()));
                 out.insert("isin_kodu".to_string(), Value::String(isin));
@@ -861,8 +881,7 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
 
         if !out.contains_key("kap_bilgi_adresi")
             && let Some(link) = kap_link_tok
-                .and_then(parse_string_token)
-                .map(|s| decode_html_entities(&s))
+                .and_then(|span| view.parse_string_token(Some(span)))
                 .filter(|s| !s.trim().is_empty())
         {
             out.insert(
@@ -874,11 +893,12 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
 
         if !out.contains_key("fon_toplam_deger_tl_raw") {
             let raw_total = fon_toplam_deger_tok
-                .and_then(parse_string_token)
-                .or_else(|| fon_toplam_deger_tl_tok.and_then(parse_string_token))
-                .or_else(|| fund_total_value_tok.and_then(parse_string_token));
+                .and_then(|span| view.parse_string_token(Some(span)))
+                .or_else(|| {
+                    fon_toplam_deger_tl_tok.and_then(|span| view.parse_string_token(Some(span)))
+                })
+                .or_else(|| fund_total_value_tok.and_then(|span| view.parse_string_token(Some(span))));
             if let Some(raw) = raw_total {
-                let raw = decode_html_entities(&raw);
                 out.insert(
                     "fon_toplam_deger_tl_raw".to_string(),
                     Value::String(raw.clone()),
@@ -889,9 +909,11 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
                     out.insert("fon_toplam_deger_tl".to_string(), Value::Number(num));
                 }
             } else if let Some(v) = fon_toplam_deger_tok
-                .and_then(parse_number_token)
-                .or_else(|| fon_toplam_deger_tl_tok.and_then(parse_number_token))
-                .or_else(|| fund_total_value_tok.and_then(parse_number_token))
+                .and_then(|span| view.parse_number_token(Some(span)))
+                .or_else(|| {
+                    fon_toplam_deger_tl_tok.and_then(|span| view.parse_number_token(Some(span)))
+                })
+                .or_else(|| fund_total_value_tok.and_then(|span| view.parse_number_token(Some(span))))
                 && let Some(num) = serde_json::Number::from_f64(v)
             {
                 out.insert(
@@ -904,18 +926,17 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
 
         if !out.contains_key("pazar_payi_raw_pct") {
             let raw_share = pazar_payi_tok
-                .and_then(parse_string_token)
-                .or_else(|| market_share_tok.and_then(parse_string_token));
+                .and_then(|span| view.parse_string_token(Some(span)))
+                .or_else(|| market_share_tok.and_then(|span| view.parse_string_token(Some(span))));
             if let Some(raw) = raw_share {
-                let raw = decode_html_entities(&raw);
                 if let Some(v) = parse_number_tr(Some(&raw))
                     && let Some(num) = serde_json::Number::from_f64(v)
                 {
                     out.insert("pazar_payi_raw_pct".to_string(), Value::Number(num));
                 }
             } else if let Some(v) = pazar_payi_tok
-                .and_then(parse_number_token)
-                .or_else(|| market_share_tok.and_then(parse_number_token))
+                .and_then(|span| view.parse_number_token(Some(span)))
+                .or_else(|| market_share_tok.and_then(|span| view.parse_number_token(Some(span))))
                 && let Some(num) = serde_json::Number::from_f64(v)
             {
                 out.insert("pazar_payi_raw_pct".to_string(), Value::Number(num));
@@ -924,8 +945,8 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
 
         if !out.contains_key("fon_risk_degeri") {
             let raw_risk = fon_risk_degeri_tok
-                .and_then(parse_string_token)
-                .or_else(|| risk_value_tok.and_then(parse_string_token));
+                .and_then(|span| view.parse_string_token(Some(span)))
+                .or_else(|| risk_value_tok.and_then(|span| view.parse_string_token(Some(span))));
             if let Some(raw) = raw_risk {
                 let mut num = String::new();
                 for ch in raw.chars().skip_while(|c| c.is_ascii_whitespace()) {
@@ -939,8 +960,8 @@ fn extract_rsc_fast_fields(text: &str) -> Map<String, Value> {
                     out.insert("fon_risk_degeri".to_string(), Value::Number(n.into()));
                 }
             } else if let Some(v) = fon_risk_degeri_tok
-                .and_then(parse_number_token)
-                .or_else(|| risk_value_tok.and_then(parse_number_token))
+                .and_then(|span| view.parse_number_token(Some(span)))
+                .or_else(|| risk_value_tok.and_then(|span| view.parse_number_token(Some(span))))
             {
                 out.insert(
                     "fon_risk_degeri".to_string(),
@@ -975,43 +996,43 @@ fn format_tr_thousands(n: i64) -> String {
     if n < 0 { format!("-{out}") } else { out }
 }
 
-fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
-    for payload in extract_next_f_string_payloads(text) {
-        type Span = (usize, usize);
+fn enrich_rsc_profile_from_payloads(payloads: &[String], out: &mut Map<String, Value>) {
+    for payload in payloads {
+        let view = RscPayloadView::new(payload);
 
-        let mut tefas_durum_tok: Option<Span> = None;
-        let mut platform_status_tok: Option<Span> = None;
-        let mut bas_is_saat_tok: Option<Span> = None;
-        let mut trade_start_tok: Option<Span> = None;
-        let mut son_is_saat_tok: Option<Span> = None;
-        let mut trade_end_tok: Option<Span> = None;
-        let mut fon_geri_alis_valor_tok: Option<Span> = None;
-        let mut fund_purchase_value_tok: Option<Span> = None;
-        let mut fon_satis_valor_tok: Option<Span> = None;
-        let mut fund_sale_value_tok: Option<Span> = None;
-        let mut min_alis_tok: Option<Span> = None;
-        let mut min_purchase_tok: Option<Span> = None;
-        let mut min_satis_tok: Option<Span> = None;
-        let mut min_sale_tok: Option<Span> = None;
-        let mut max_alis_tok: Option<Span> = None;
-        let mut max_purchase_tok: Option<Span> = None;
-        let mut max_satis_tok: Option<Span> = None;
-        let mut max_sale_tok: Option<Span> = None;
-        let mut yatirimci_sayi_tok: Option<Span> = None;
-        let mut investor_count_tok: Option<Span> = None;
-        let mut fon_kategori_tok: Option<Span> = None;
-        let mut fund_category_tok: Option<Span> = None;
-        let mut kategori_derece_tok: Option<Span> = None;
-        let mut fund_category_degree_tok: Option<Span> = None;
-        let mut kategori_fon_say_tok: Option<Span> = None;
-        let mut giris_kom_tok: Option<Span> = None;
-        let mut entrance_commission_tok: Option<Span> = None;
-        let mut cikis_kom_tok: Option<Span> = None;
-        let mut exit_commission_tok: Option<Span> = None;
-        let mut faiz_icerigi_tok: Option<Span> = None;
-        let mut interest_content_tok: Option<Span> = None;
+        let mut tefas_durum_tok: Option<RscTokenSpan> = None;
+        let mut platform_status_tok: Option<RscTokenSpan> = None;
+        let mut bas_is_saat_tok: Option<RscTokenSpan> = None;
+        let mut trade_start_tok: Option<RscTokenSpan> = None;
+        let mut son_is_saat_tok: Option<RscTokenSpan> = None;
+        let mut trade_end_tok: Option<RscTokenSpan> = None;
+        let mut fon_geri_alis_valor_tok: Option<RscTokenSpan> = None;
+        let mut fund_purchase_value_tok: Option<RscTokenSpan> = None;
+        let mut fon_satis_valor_tok: Option<RscTokenSpan> = None;
+        let mut fund_sale_value_tok: Option<RscTokenSpan> = None;
+        let mut min_alis_tok: Option<RscTokenSpan> = None;
+        let mut min_purchase_tok: Option<RscTokenSpan> = None;
+        let mut min_satis_tok: Option<RscTokenSpan> = None;
+        let mut min_sale_tok: Option<RscTokenSpan> = None;
+        let mut max_alis_tok: Option<RscTokenSpan> = None;
+        let mut max_purchase_tok: Option<RscTokenSpan> = None;
+        let mut max_satis_tok: Option<RscTokenSpan> = None;
+        let mut max_sale_tok: Option<RscTokenSpan> = None;
+        let mut yatirimci_sayi_tok: Option<RscTokenSpan> = None;
+        let mut investor_count_tok: Option<RscTokenSpan> = None;
+        let mut fon_kategori_tok: Option<RscTokenSpan> = None;
+        let mut fund_category_tok: Option<RscTokenSpan> = None;
+        let mut kategori_derece_tok: Option<RscTokenSpan> = None;
+        let mut fund_category_degree_tok: Option<RscTokenSpan> = None;
+        let mut kategori_fon_say_tok: Option<RscTokenSpan> = None;
+        let mut giris_kom_tok: Option<RscTokenSpan> = None;
+        let mut entrance_commission_tok: Option<RscTokenSpan> = None;
+        let mut cikis_kom_tok: Option<RscTokenSpan> = None;
+        let mut exit_commission_tok: Option<RscTokenSpan> = None;
+        let mut faiz_icerigi_tok: Option<RscTokenSpan> = None;
+        let mut interest_content_tok: Option<RscTokenSpan> = None;
 
-        for_each_json_field(&payload, |ks, ke, vs, ve| {
+        for_each_json_field(payload, |ks, ke, vs, ve| {
             let key = &payload[ks..ke];
             let span = (vs, ve);
             match key {
@@ -1073,34 +1094,10 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
             true
         });
 
-        let parse_s = |token: Option<Span>| -> Option<String> {
-            let (s, e) = token?;
-            let t = &payload[s..e];
-            if t == "null" || !t.starts_with('"') {
-                return None;
-            }
-            parse_json_string_literal(t)
-                .map(|s| decode_html_entities(&s))
-                .filter(|s| !s.is_empty())
-        };
-
-        let parse_n = |token: Option<Span>| -> Option<f64> {
-            let (s, e) = token?;
-            let t = &payload[s..e];
-            if t == "null" {
-                return None;
-            }
-            if t.starts_with('"') {
-                if let Some(decoded) = parse_json_string_literal(t) {
-                    return parse_number_tr(Some(&decoded));
-                }
-                return None;
-            }
-            t.parse::<f64>().ok()
-        };
-
         if !out.contains_key("platform_islem_durumu_raw")
-            && let Some(v) = parse_s(tefas_durum_tok).or_else(|| parse_s(platform_status_tok))
+            && let Some(v) = view
+                .parse_string_token(tefas_durum_tok)
+                .or_else(|| view.parse_string_token(platform_status_tok))
             && !v.is_empty()
         {
             out.insert(
@@ -1111,7 +1108,9 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
         }
 
         if !out.contains_key("islem_baslangic_saati_raw")
-            && let Some(v) = parse_s(bas_is_saat_tok).or_else(|| parse_s(trade_start_tok))
+            && let Some(v) = view
+                .parse_string_token(bas_is_saat_tok)
+                .or_else(|| view.parse_string_token(trade_start_tok))
             && !v.is_empty()
         {
             out.insert(
@@ -1122,7 +1121,9 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
         }
 
         if !out.contains_key("son_islem_saati_raw")
-            && let Some(v) = parse_s(son_is_saat_tok).or_else(|| parse_s(trade_end_tok))
+            && let Some(v) = view
+                .parse_string_token(son_is_saat_tok)
+                .or_else(|| view.parse_string_token(trade_end_tok))
             && !v.is_empty()
         {
             out.insert("son_islem_saati_raw".to_string(), Value::String(v.clone()));
@@ -1135,25 +1136,32 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
             }
             let v = match candidates {
                 ["fonGeriAlisValor", "fundPurchaseValue"] => {
-                    parse_n(fon_geri_alis_valor_tok).or_else(|| parse_n(fund_purchase_value_tok))
+                    view.parse_number_token(fon_geri_alis_valor_tok)
+                        .or_else(|| view.parse_number_token(fund_purchase_value_tok))
                 }
                 ["fonSatisValor", "fundSaleValue"] => {
-                    parse_n(fon_satis_valor_tok).or_else(|| parse_n(fund_sale_value_tok))
+                    view.parse_number_token(fon_satis_valor_tok)
+                        .or_else(|| view.parse_number_token(fund_sale_value_tok))
                 }
                 ["minAlis", "minPurchaseAmount"] => {
-                    parse_n(min_alis_tok).or_else(|| parse_n(min_purchase_tok))
+                    view.parse_number_token(min_alis_tok)
+                        .or_else(|| view.parse_number_token(min_purchase_tok))
                 }
                 ["minSatis", "minSaleAmount"] => {
-                    parse_n(min_satis_tok).or_else(|| parse_n(min_sale_tok))
+                    view.parse_number_token(min_satis_tok)
+                        .or_else(|| view.parse_number_token(min_sale_tok))
                 }
                 ["maxAlis", "maxPurchaseAmount"] => {
-                    parse_n(max_alis_tok).or_else(|| parse_n(max_purchase_tok))
+                    view.parse_number_token(max_alis_tok)
+                        .or_else(|| view.parse_number_token(max_purchase_tok))
                 }
                 ["maxSatis", "maxSaleAmount"] => {
-                    parse_n(max_satis_tok).or_else(|| parse_n(max_sale_tok))
+                    view.parse_number_token(max_satis_tok)
+                        .or_else(|| view.parse_number_token(max_sale_tok))
                 }
                 ["yatirimciSayi", "investorCount"] => {
-                    parse_n(yatirimci_sayi_tok).or_else(|| parse_n(investor_count_tok))
+                    view.parse_number_token(yatirimci_sayi_tok)
+                        .or_else(|| view.parse_number_token(investor_count_tok))
                 }
                 _ => None,
             };
@@ -1176,7 +1184,9 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
         insert_i64("yatirimci_sayisi", &["yatirimciSayi", "investorCount"]);
 
         if !out.contains_key("kategori_raw")
-            && let Some(v) = parse_s(fon_kategori_tok).or_else(|| parse_s(fund_category_tok))
+            && let Some(v) = view
+                .parse_string_token(fon_kategori_tok)
+                .or_else(|| view.parse_string_token(fund_category_tok))
             && !v.is_empty()
         {
             out.insert("kategori_raw".to_string(), Value::String(v.clone()));
@@ -1185,11 +1195,12 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
 
         if !out.contains_key("son_1yillik_kategori_derecesi_raw")
             && !out.contains_key("son_1yillik_kategori_derecesi")
-            && let Some(degree) =
-                parse_n(kategori_derece_tok).or_else(|| parse_n(fund_category_degree_tok))
+            && let Some(degree) = view
+                .parse_number_token(kategori_derece_tok)
+                .or_else(|| view.parse_number_token(fund_category_degree_tok))
         {
             let rank = degree.trunc() as i64;
-            let raw = if let Some(total) = parse_n(kategori_fon_say_tok) {
+            let raw = if let Some(total) = view.parse_number_token(kategori_fon_say_tok) {
                 format!("{}/{}", rank, format_tr_thousands(total.trunc() as i64))
             } else {
                 rank.to_string()
@@ -1205,19 +1216,25 @@ fn enrich_rsc_profile_from_payloads(text: &str, out: &mut Map<String, Value>) {
         }
 
         if !out.contains_key("giris_komisyonu_raw")
-            && let Some(v) = parse_s(giris_kom_tok).or_else(|| parse_s(entrance_commission_tok))
+            && let Some(v) = view
+                .parse_string_token(giris_kom_tok)
+                .or_else(|| view.parse_string_token(entrance_commission_tok))
         {
             out.insert("giris_komisyonu_raw".to_string(), Value::String(v));
         }
 
         if !out.contains_key("cikis_komisyonu_raw")
-            && let Some(v) = parse_s(cikis_kom_tok).or_else(|| parse_s(exit_commission_tok))
+            && let Some(v) = view
+                .parse_string_token(cikis_kom_tok)
+                .or_else(|| view.parse_string_token(exit_commission_tok))
         {
             out.insert("cikis_komisyonu_raw".to_string(), Value::String(v));
         }
 
         if !out.contains_key("fon_faiz_icerigi_raw")
-            && let Some(v) = parse_s(faiz_icerigi_tok).or_else(|| parse_s(interest_content_tok))
+            && let Some(v) = view
+                .parse_string_token(faiz_icerigi_tok)
+                .or_else(|| view.parse_string_token(interest_content_tok))
         {
             out.insert("fon_faiz_icerigi_raw".to_string(), Value::String(v));
         }
@@ -1782,6 +1799,64 @@ impl std::ops::DerefMut for ParseAccumulator {
     }
 }
 
+fn insert_return_metric(
+    fields: &mut Map<String, Value>,
+    raw_key: &str,
+    pct_key: &str,
+    value: Option<String>,
+) {
+    fields.insert(
+        raw_key.to_string(),
+        value
+            .clone()
+            .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
+    );
+
+    if let Some(v) = parse_number_tr(value.as_deref()) {
+        fields.insert(
+            pct_key.to_string(),
+            Value::Number(serde_json::Number::from_f64(v).unwrap()),
+        );
+    }
+}
+
+fn capture_return_metrics<F>(
+    fields: &mut Map<String, Value>,
+    text: &str,
+    find_label: &F,
+    include_targeted_fallback: bool,
+) where
+    F: Fn(&str) -> Option<String>,
+{
+    for (label, raw_key, pct_key) in RETURN_SPECS {
+        let value = find_label(label).or_else(|| {
+            include_targeted_fallback.then(|| next_p_value_after_label(text, label, true))?
+        });
+        insert_return_metric(fields, raw_key, pct_key, value);
+    }
+}
+
+#[cfg(not(feature = "return_single_pass"))]
+fn fill_missing_return_metric_fallbacks(fields: &mut Map<String, Value>, text: &str) {
+    for (label, raw_key, pct_key) in RETURN_SPECS {
+        if (!fields.contains_key(*raw_key) || matches!(fields.get(*raw_key), Some(Value::Null)))
+            && let Some(value) = next_p_value_after_label(text, label, true)
+            && !value.is_empty()
+        {
+            fields.insert(
+                raw_key.to_string(),
+                Value::String(decode_html_entities(&value)),
+            );
+            if let Some(number) = parse_number_tr(Some(&value)) {
+                fields.insert(
+                    pct_key.to_string(),
+                    Value::Number(serde_json::Number::from_f64(number).unwrap()),
+                );
+            }
+        }
+    }
+}
+
 pub fn parse_html_text(text: &str) -> (Value, Value) {
     let doc = FundDocument::classify(text);
     let text = doc.full_text;
@@ -1970,182 +2045,13 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
     // Return extraction (Getiri Bilgisi)
     #[cfg(feature = "return_single_pass")]
     {
-        // A/B variant: single-pass label extraction with fallback.
-        let return_specs = [
-            (
-                "Son 1 Ay Getirisi",
-                "son_1ay_getiri_raw",
-                "son_1ay_getiri_pct",
-            ),
-            (
-                "Son 3 Ay Getirisi",
-                "son_3ay_getiri_raw",
-                "son_3ay_getiri_pct",
-            ),
-            (
-                "Son 6 Ay Getirisi",
-                "son_6ay_getiri_raw",
-                "son_6ay_getiri_pct",
-            ),
-            (
-                "Son 1 Yıl Getirisi",
-                "son_1yil_getiri_raw",
-                "son_1yil_getiri_pct",
-            ),
-            (
-                "Son 3 Yıl Getirisi",
-                "son_3yil_getiri_raw",
-                "son_3yil_getiri_pct",
-            ),
-            (
-                "Son 5 Yıl Getirisi",
-                "son_5yil_getiri_raw",
-                "son_5yil_getiri_pct",
-            ),
-        ];
-
-        for (label, raw_key, pct_key) in return_specs {
-            let val = find_label(label).or_else(|| next_p_value_after_label(text, label, true));
-            res.insert(
-                raw_key.to_string(),
-                val.clone()
-                    .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-            );
-            if let Some(v) = parse_number_tr(val.as_deref()) {
-                res.insert(
-                    pct_key.to_string(),
-                    Value::Number(serde_json::Number::from_f64(v).unwrap()),
-                );
-            }
-        }
+        capture_return_metrics(&mut res, text, &find_label, true);
     }
 
     #[cfg(not(feature = "return_single_pass"))]
     {
-        let r1 = find_label("Son 1 Ay Getirisi");
-        res.insert(
-            "son_1ay_getiri_raw".to_string(),
-            r1.clone()
-                .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-        );
-        if let Some(v) = parse_number_tr(r1.as_deref()) {
-            res.insert(
-                "son_1ay_getiri_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(v).unwrap()),
-            );
-        }
-
-        let r3 = find_label("Son 3 Ay Getirisi");
-        res.insert(
-            "son_3ay_getiri_raw".to_string(),
-            r3.clone()
-                .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-        );
-        if let Some(v) = parse_number_tr(r3.as_deref()) {
-            res.insert(
-                "son_3ay_getiri_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(v).unwrap()),
-            );
-        }
-
-        let r6 = find_label("Son 6 Ay Getirisi");
-        res.insert(
-            "son_6ay_getiri_raw".to_string(),
-            r6.clone()
-                .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-        );
-        if let Some(v) = parse_number_tr(r6.as_deref()) {
-            res.insert(
-                "son_6ay_getiri_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(v).unwrap()),
-            );
-        }
-
-        let r1y = find_label("Son 1 Yıl Getirisi");
-        res.insert(
-            "son_1yil_getiri_raw".to_string(),
-            r1y.clone()
-                .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-        );
-        if let Some(v) = parse_number_tr(r1y.as_deref()) {
-            res.insert(
-                "son_1yil_getiri_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(v).unwrap()),
-            );
-        }
-
-        let r3y = find_label("Son 3 Yıl Getirisi");
-        res.insert(
-            "son_3yil_getiri_raw".to_string(),
-            r3y.clone()
-                .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-        );
-        if let Some(v) = parse_number_tr(r3y.as_deref()) {
-            res.insert(
-                "son_3yil_getiri_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(v).unwrap()),
-            );
-        }
-
-        let r5y = find_label("Son 5 Yıl Getirisi");
-        res.insert(
-            "son_5yil_getiri_raw".to_string(),
-            r5y.clone()
-                .map_or(Value::Null, |s| Value::String(decode_html_entities(&s))),
-        );
-        if let Some(v) = parse_number_tr(r5y.as_deref()) {
-            res.insert(
-                "son_5yil_getiri_pct".to_string(),
-                Value::Number(serde_json::Number::from_f64(v).unwrap()),
-            );
-        }
-
-        // Targeted fallbacks for return values in case find_label didn't find them
-        let mut try_capture_return = |label: &str, raw_key: &str, pct_key: &str| {
-            if (!res.contains_key(raw_key) || matches!(res.get(raw_key), Some(Value::Null)))
-                && let Some(v) = next_p_value_after_label(text, label, true)
-                && !v.is_empty()
-            {
-                res.insert(raw_key.to_string(), Value::String(decode_html_entities(&v)));
-                if let Some(n) = parse_number_tr(Some(&v)) {
-                    res.insert(
-                        pct_key.to_string(),
-                        Value::Number(serde_json::Number::from_f64(n).unwrap()),
-                    );
-                }
-            }
-        };
-
-        try_capture_return(
-            "Son 1 Ay Getirisi",
-            "son_1ay_getiri_raw",
-            "son_1ay_getiri_pct",
-        );
-        try_capture_return(
-            "Son 3 Ay Getirisi",
-            "son_3ay_getiri_raw",
-            "son_3ay_getiri_pct",
-        );
-        try_capture_return(
-            "Son 6 Ay Getirisi",
-            "son_6ay_getiri_raw",
-            "son_6ay_getiri_pct",
-        );
-        try_capture_return(
-            "Son 1 Yıl Getirisi",
-            "son_1yil_getiri_raw",
-            "son_1yil_getiri_pct",
-        );
-        try_capture_return(
-            "Son 3 Yıl Getirisi",
-            "son_3yil_getiri_raw",
-            "son_3yil_getiri_pct",
-        );
-        try_capture_return(
-            "Son 5 Yıl Getirisi",
-            "son_5yil_getiri_raw",
-            "son_5yil_getiri_pct",
-        );
+        capture_return_metrics(&mut res, text, &find_label, false);
+        fill_missing_return_metric_fallbacks(&mut res, text);
     }
     // Fallback: if Fon Toplam Değer wasn't captured via table/pairs, try a targeted regex
     if !res.contains_key("fon_toplam_deger_tl_raw")
@@ -2236,13 +2142,23 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
         }
     }
 
-    if matches!(doc.kind, DocumentKind::NextJsRsc) {
-        enrich_rsc_profile_from_payloads(text, &mut res);
+    let rsc_payloads = if is_rsc {
+        Some(extract_next_f_string_payloads(text))
+    } else {
+        None
+    };
+
+    if matches!(doc.kind, DocumentKind::NextJsRsc)
+        && let Some(payloads) = rsc_payloads.as_ref()
+    {
+        enrich_rsc_profile_from_payloads(payloads, &mut res);
     }
 
     let needs_rsc_fallback = !res.contains_key("fon_kodu") || !res.contains_key("isin_kodu");
-    if needs_rsc_fallback && is_rsc {
-        let rsc_fast = extract_rsc_fast_fields(text);
+    if needs_rsc_fallback
+        && let Some(payloads) = rsc_payloads.as_ref()
+    {
+        let rsc_fast = extract_rsc_fast_fields_from_payloads(payloads);
         for (k, v) in rsc_fast {
             res.entry(k).or_insert(v);
         }
