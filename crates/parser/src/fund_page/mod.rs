@@ -107,12 +107,36 @@ const FALLBACK_LABELS: &[&str] = &[
 ];
 
 const RETURN_SPECS: &[(&str, &str, &str)] = &[
-    ("Son 1 Ay Getirisi", "son_1ay_getiri_raw", "son_1ay_getiri_pct"),
-    ("Son 3 Ay Getirisi", "son_3ay_getiri_raw", "son_3ay_getiri_pct"),
-    ("Son 6 Ay Getirisi", "son_6ay_getiri_raw", "son_6ay_getiri_pct"),
-    ("Son 1 Yıl Getirisi", "son_1yil_getiri_raw", "son_1yil_getiri_pct"),
-    ("Son 3 Yıl Getirisi", "son_3yil_getiri_raw", "son_3yil_getiri_pct"),
-    ("Son 5 Yıl Getirisi", "son_5yil_getiri_raw", "son_5yil_getiri_pct"),
+    (
+        "Son 1 Ay Getirisi",
+        "son_1ay_getiri_raw",
+        "son_1ay_getiri_pct",
+    ),
+    (
+        "Son 3 Ay Getirisi",
+        "son_3ay_getiri_raw",
+        "son_3ay_getiri_pct",
+    ),
+    (
+        "Son 6 Ay Getirisi",
+        "son_6ay_getiri_raw",
+        "son_6ay_getiri_pct",
+    ),
+    (
+        "Son 1 Yıl Getirisi",
+        "son_1yil_getiri_raw",
+        "son_1yil_getiri_pct",
+    ),
+    (
+        "Son 3 Yıl Getirisi",
+        "son_3yil_getiri_raw",
+        "son_3yil_getiri_pct",
+    ),
+    (
+        "Son 5 Yıl Getirisi",
+        "son_5yil_getiri_raw",
+        "son_5yil_getiri_pct",
+    ),
 ];
 
 // Canonical profile label -> output key mapping reused across parse calls.
@@ -897,7 +921,9 @@ fn extract_rsc_fast_fields_from_payloads(payloads: &[String]) -> Map<String, Val
                 .or_else(|| {
                     fon_toplam_deger_tl_tok.and_then(|span| view.parse_string_token(Some(span)))
                 })
-                .or_else(|| fund_total_value_tok.and_then(|span| view.parse_string_token(Some(span))));
+                .or_else(|| {
+                    fund_total_value_tok.and_then(|span| view.parse_string_token(Some(span)))
+                });
             if let Some(raw) = raw_total {
                 out.insert(
                     "fon_toplam_deger_tl_raw".to_string(),
@@ -913,7 +939,9 @@ fn extract_rsc_fast_fields_from_payloads(payloads: &[String]) -> Map<String, Val
                 .or_else(|| {
                     fon_toplam_deger_tl_tok.and_then(|span| view.parse_number_token(Some(span)))
                 })
-                .or_else(|| fund_total_value_tok.and_then(|span| view.parse_number_token(Some(span))))
+                .or_else(|| {
+                    fund_total_value_tok.and_then(|span| view.parse_number_token(Some(span)))
+                })
                 && let Some(num) = serde_json::Number::from_f64(v)
             {
                 out.insert(
@@ -1135,34 +1163,27 @@ fn enrich_rsc_profile_from_payloads(payloads: &[String], out: &mut Map<String, V
                 return;
             }
             let v = match candidates {
-                ["fonGeriAlisValor", "fundPurchaseValue"] => {
-                    view.parse_number_token(fon_geri_alis_valor_tok)
-                        .or_else(|| view.parse_number_token(fund_purchase_value_tok))
-                }
-                ["fonSatisValor", "fundSaleValue"] => {
-                    view.parse_number_token(fon_satis_valor_tok)
-                        .or_else(|| view.parse_number_token(fund_sale_value_tok))
-                }
-                ["minAlis", "minPurchaseAmount"] => {
-                    view.parse_number_token(min_alis_tok)
-                        .or_else(|| view.parse_number_token(min_purchase_tok))
-                }
-                ["minSatis", "minSaleAmount"] => {
-                    view.parse_number_token(min_satis_tok)
-                        .or_else(|| view.parse_number_token(min_sale_tok))
-                }
-                ["maxAlis", "maxPurchaseAmount"] => {
-                    view.parse_number_token(max_alis_tok)
-                        .or_else(|| view.parse_number_token(max_purchase_tok))
-                }
-                ["maxSatis", "maxSaleAmount"] => {
-                    view.parse_number_token(max_satis_tok)
-                        .or_else(|| view.parse_number_token(max_sale_tok))
-                }
-                ["yatirimciSayi", "investorCount"] => {
-                    view.parse_number_token(yatirimci_sayi_tok)
-                        .or_else(|| view.parse_number_token(investor_count_tok))
-                }
+                ["fonGeriAlisValor", "fundPurchaseValue"] => view
+                    .parse_number_token(fon_geri_alis_valor_tok)
+                    .or_else(|| view.parse_number_token(fund_purchase_value_tok)),
+                ["fonSatisValor", "fundSaleValue"] => view
+                    .parse_number_token(fon_satis_valor_tok)
+                    .or_else(|| view.parse_number_token(fund_sale_value_tok)),
+                ["minAlis", "minPurchaseAmount"] => view
+                    .parse_number_token(min_alis_tok)
+                    .or_else(|| view.parse_number_token(min_purchase_tok)),
+                ["minSatis", "minSaleAmount"] => view
+                    .parse_number_token(min_satis_tok)
+                    .or_else(|| view.parse_number_token(min_sale_tok)),
+                ["maxAlis", "maxPurchaseAmount"] => view
+                    .parse_number_token(max_alis_tok)
+                    .or_else(|| view.parse_number_token(max_purchase_tok)),
+                ["maxSatis", "maxSaleAmount"] => view
+                    .parse_number_token(max_satis_tok)
+                    .or_else(|| view.parse_number_token(max_sale_tok)),
+                ["yatirimciSayi", "investorCount"] => view
+                    .parse_number_token(yatirimci_sayi_tok)
+                    .or_else(|| view.parse_number_token(investor_count_tok)),
                 _ => None,
             };
             if let Some(v) = v {
@@ -2155,9 +2176,7 @@ pub fn parse_html_text(text: &str) -> (Value, Value) {
     }
 
     let needs_rsc_fallback = !res.contains_key("fon_kodu") || !res.contains_key("isin_kodu");
-    if needs_rsc_fallback
-        && let Some(payloads) = rsc_payloads.as_ref()
-    {
+    if needs_rsc_fallback && let Some(payloads) = rsc_payloads.as_ref() {
         let rsc_fast = extract_rsc_fast_fields_from_payloads(payloads);
         for (k, v) in rsc_fast {
             res.entry(k).or_insert(v);
