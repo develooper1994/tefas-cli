@@ -885,22 +885,20 @@ fn extract_rsc_fast_fields_from_payloads(payloads: &[String]) -> Map<String, Val
             && let Some(code) = fon_kodu_tok
                 .and_then(|span| view.parse_string_token(Some(span)))
                 .or_else(|| fund_code_tok.and_then(|span| view.parse_string_token(Some(span))))
+            && !code.trim().is_empty()
         {
-            if !code.trim().is_empty() {
-                out.insert("fon_kodu_raw".to_string(), Value::String(code.clone()));
-                out.insert("fon_kodu".to_string(), Value::String(code));
-            }
+            out.insert("fon_kodu_raw".to_string(), Value::String(code.clone()));
+            out.insert("fon_kodu".to_string(), Value::String(code));
         }
 
         if !out.contains_key("isin_kodu_raw")
             && let Some(isin) = isin_kodu_tok
                 .and_then(|span| view.parse_string_token(Some(span)))
                 .or_else(|| isin_tok.and_then(|span| view.parse_string_token(Some(span))))
+            && !isin.trim().is_empty()
         {
-            if !isin.trim().is_empty() {
-                out.insert("isin_kodu_raw".to_string(), Value::String(isin.clone()));
-                out.insert("isin_kodu".to_string(), Value::String(isin));
-            }
+            out.insert("isin_kodu_raw".to_string(), Value::String(isin.clone()));
+            out.insert("isin_kodu".to_string(), Value::String(isin));
         }
 
         if !out.contains_key("kap_bilgi_adresi")
